@@ -28,7 +28,12 @@ void ARunCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompon
 
 void ARunCharacter::SetPlayerHealth(float const Health)
 {
-	PlayerHealth += Health;	
+	PlayerHealth += Health;
+	
+	if(PlayerHealth <= 0)
+	{
+		PlayerHealth = 0;
+	}
 }
 
 float ARunCharacter::GetPlayerHealth() const
