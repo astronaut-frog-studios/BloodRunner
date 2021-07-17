@@ -19,8 +19,20 @@ protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
+	UPROPERTY(VisibleAnywhere)
+	float MaxHealth;
 	UPROPERTY(EditAnywhere)
 	float PlayerHealth;
+
+	UPROPERTY(EditAnywhere)
+	int32 MaxHealthPotions;
+	UPROPERTY(EditAnywhere)
+	int32 HealthPotions;
+	UPROPERTY(EditAnywhere)
+	float AmountToHeal;
+
+	UPROPERTY(EditAnywhere)
+	FName LevelToLoad;
 
 public:
 	// Called every frame
@@ -28,10 +40,21 @@ public:
 
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
-	
-	UFUNCTION(BlueprintCallable)
-	void SetPlayerHealth(float Health = 0.1f);
 
 	UFUNCTION(BlueprintCallable)
 	float GetPlayerHealth() const;
+	UFUNCTION(BlueprintCallable)
+	void IncrementPlayerHealth(float Health = 0.1f);
+	UFUNCTION(BlueprintCallable)
+	void SetPlayerHealth(float Health) ;
+
+	UFUNCTION(BlueprintCallable)
+	float GetHealthPotions() const;
+	UFUNCTION(BlueprintCallable)
+	void IncrementHealthPotions(int HealthPotion = 1);
+	UFUNCTION(BlueprintCallable)
+	void SetHealthPotions(int Potions);
+
+	UFUNCTION(BlueprintCallable)
+	void HealPlayer();
 };

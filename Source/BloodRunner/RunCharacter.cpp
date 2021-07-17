@@ -1,20 +1,22 @@
 #include "RunCharacter.h"
+#include "Kismet/GameplayStatics.h"
 
 // Sets default values
 ARunCharacter::ARunCharacter()
 {
- 	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
-	PlayerHealth = 0.3f;
+	MaxHealth = 1.0f;
+	PlayerHealth = MaxHealth;
+	HealthPotions = 0;
+	AmountToHeal = 0.2f;
+	MaxHealthPotions = 6;
 }
 
-// Called when the game starts or when spawned
 void ARunCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 }
 
-// Called every frame
 void ARunCharacter::Tick(float const DeltaTime)
 {
 	Super::Tick(DeltaTime);
@@ -24,19 +26,67 @@ void ARunCharacter::Tick(float const DeltaTime)
 void ARunCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
-}
 
-void ARunCharacter::SetPlayerHealth(float const Health)
-{
-	PlayerHealth += Health;
-	
-	if(PlayerHealth <= 0)
-	{
-		PlayerHealth = 0;
-	}
+	PlayerInputComponent->BindAction("Heal", IE_Pressed, this, &ARunCharacter::HealPlayer);
 }
 
 float ARunCharacter::GetPlayerHealth() const
 {
 	return PlayerHealth;
+}
+
+void ARunCharacter::SetPlayerHealth(float const Health)
+{
+	PlayerHealth = Health;
+}
+
+void ARunCharacter::IncrementPlayerHealth(float const Health)
+{
+	PlayerHealth += Health;
+
+	if (PlayerHealth <= 0)
+	{
+		PlayerHealth = 0;
+
+		if (LevelToLoad != "")
+		{
+			UGameplayStatics::OpenLevel(this,LevelToLoad, false);
+		}
+	}
+}
+
+float ARunCharacter::GetHealthPotions() const
+{
+	return HealthPotions;
+}
+
+void ARunCharacter::IncrementHealthPotions(int const HealthPotion)
+{
+	if (HealthPotions >= MaxHealthPotions)
+	{
+		HealthPotions = MaxHealthPotions;
+		return;
+	}
+
+	HealthPotions += HealthPotion;
+}
+
+void ARunCharacter::SetHealthPotions(int const Potions)
+{
+	HealthPotions = Potions;
+}
+
+void ARunCharacter::HealPlayer()
+{
+	if (HealthPotions == 0) return;
+
+	if (PlayerHealth < MaxHealth)
+	{
+		IncrementPlayerHealth(AmountToHeal);
+		IncrementHealthPotions(-1);
+	}
+	if (PlayerHealth >= MaxHealth)
+	{
+		SetPlayerHealth(MaxHealth);
+	}
 }
