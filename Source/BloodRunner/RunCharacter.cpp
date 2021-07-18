@@ -1,4 +1,7 @@
 #include "RunCharacter.h"
+
+#include "GameHud.h"
+#include "RunnerGameModeBase.h"
 #include "Kismet/GameplayStatics.h"
 
 // Sets default values
@@ -15,6 +18,10 @@ ARunCharacter::ARunCharacter()
 void ARunCharacter::BeginPlay()
 {
 	Super::BeginPlay();
+
+	GameHud = Cast<ARunnerGameModeBase>(UGameplayStatics::GetGameMode(GetWorld()))->GameHud;
+	check(GameHud);
+	GameHud->InitializeGameHudPlayer(this);
 }
 
 void ARunCharacter::Tick(float const DeltaTime)
@@ -44,13 +51,15 @@ void ARunCharacter::IncrementPlayerHealth(float const Health)
 {
 	PlayerHealth += Health;
 
-	if (PlayerHealth <= 0)
+	OnHealthBarChange.Broadcast(PlayerHealth);
+
+	if (PlayerHealth <= 0.01f)
 	{
-		PlayerHealth = 0;
+		PlayerHealth = 0.f;
 
 		if (LevelToLoad != "")
 		{
-			UGameplayStatics::OpenLevel(this,LevelToLoad, false);
+			UGameplayStatics::OpenLevel(this, LevelToLoad);
 		}
 	}
 }
@@ -69,6 +78,8 @@ void ARunCharacter::IncrementHealthPotions(int const HealthPotion)
 	}
 
 	HealthPotions += HealthPotion;
+
+	OnPotionsCountChange.Broadcast(HealthPotions);
 }
 
 void ARunCharacter::SetHealthPotions(int const Potions)
@@ -84,9 +95,16 @@ void ARunCharacter::HealPlayer()
 	{
 		IncrementPlayerHealth(AmountToHeal);
 		IncrementHealthPotions(-1);
+
+		if (HealingSound)
+		{
+			UGameplayStatics::PlaySoundAtLocation(GetWorld(), HealingSound, GetActorLocation());
+		}
 	}
 	if (PlayerHealth >= MaxHealth)
 	{
 		SetPlayerHealth(MaxHealth);
 	}
+
+	OnHealthBarChange.Broadcast(PlayerHealth);
 }
