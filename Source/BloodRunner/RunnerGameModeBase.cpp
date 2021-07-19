@@ -3,6 +3,7 @@
 
 #include "RunnerGameModeBase.h"
 
+#include "FloorTile.h"
 #include "GameHud.h"
 #include "Blueprint/UserWidget.h"
 #include "Kismet/GameplayStatics.h"
@@ -15,4 +16,47 @@ void ARunnerGameModeBase::BeginPlay()
 	check(GameHud);
 
 	GameHud->AddToViewport();
+
+	CreateInitialFloorTiles();
+}
+
+void ARunnerGameModeBase::CreateInitialFloorTiles()
+{
+	AFloorTile* Tile = AddFloorTile();
+
+	if (Tile)
+	{
+		LaneSwitchingHorizontalValues.Add(Tile->LeftLaneArrow->GetComponentLocation().Y);
+		LaneSwitchingHorizontalValues.Add(Tile->CenterLaneArrow->GetComponentLocation().Y);
+		LaneSwitchingHorizontalValues.Add(Tile->RightLaneArrow->GetComponentLocation().Y);
+	}
+
+	for (float Val : LaneSwitchingHorizontalValues)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("LaneValue: %f"), Val);
+	}
+
+	for (int i = 0; i < InitialFloorTilesCount; ++i)
+	{
+		AddFloorTile();
+	}
+}
+
+AFloorTile* ARunnerGameModeBase::AddFloorTile()
+{
+	UWorld* CurrentWorld = GetWorld();
+
+	if (CurrentWorld)
+	{
+		AFloorTile* TileToSpawn = CurrentWorld->SpawnActor<AFloorTile>(FloorTileClass, NextFloorSpawnPoint);
+
+		if (IsValid(TileToSpawn)) // == if(TitleToSpawn)
+		{
+			NextFloorSpawnPoint = TileToSpawn->GetAttachTransform();
+		}
+
+		return TileToSpawn;
+	}
+
+	return nullptr;
 }
