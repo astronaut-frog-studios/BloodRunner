@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+
 #include "GameFramework/Character.h"
 #include "RunCharacter.generated.h"
 
@@ -16,6 +17,10 @@ class BLOODRUNNER_API ARunCharacter : public ACharacter
 {
 	GENERATED_BODY()
 
+private:
+	UPROPERTY(VisibleInstanceOnly)
+	 class ARunnerGameModeBase* RunnerGameMode;
+	
 public:
 	// Sets default values for this character's properties
 	ARunCharacter();
@@ -52,11 +57,41 @@ public:
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
-	UPROPERTY(BlueprintAssignable, BlueprintCallable, Category="Delegates")
-	FOnPotionsCountChange OnPotionsCountChange;
+	UPROPERTY(VisibleInstanceOnly, BlueprintReadWrite)
+	int32 CurrentLane = 1;
 
-	UPROPERTY(BlueprintAssignable, BlueprintCallable, Category="Delegates")
-	FOnHealthBarChange OnHealthBarChange;
+	UPROPERTY(VisibleInstanceOnly, BlueprintReadWrite)
+	int32 NextLane = 0;
+
+	UFUNCTION(BlueprintImplementableEvent, Category="LaneSwitch")
+	void ChangeLane();
+
+	UFUNCTION(BlueprintCallable, Category="LaneSwitch")
+	void ChangeLaneUpdate(float InterpolationValue);
+
+	UFUNCTION(BlueprintCallable, Category="LaneSwitch")
+	void ChangeLaneFinished();
+
+	UFUNCTION(BlueprintCallable)
+	void MoveRight();
+
+	UFUNCTION(BlueprintCallable)
+	void MoveLeft();
+
+	UFUNCTION(BlueprintCallable)
+	void MoveUp();
+
+	UFUNCTION(BlueprintCallable)
+	void MoveDown();
+
+	UFUNCTION(BlueprintCallable)
+	void Attack();
+
+	UFUNCTION(BlueprintCallable)
+	void Shoot();
+
+	UFUNCTION(BlueprintCallable)
+	void HealPlayer();
 
 	UFUNCTION(BlueprintCallable)
 	float GetPlayerHealth() const;
@@ -72,6 +107,9 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void SetHealthPotions(int Potions);
 
-	UFUNCTION(BlueprintCallable)
-	void HealPlayer();
+	UPROPERTY(BlueprintAssignable, BlueprintCallable, Category="Delegates")
+	FOnPotionsCountChange OnPotionsCountChange;
+
+	UPROPERTY(BlueprintAssignable, BlueprintCallable, Category="Delegates")
+	FOnHealthBarChange OnHealthBarChange;
 };
