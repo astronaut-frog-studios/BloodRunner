@@ -22,23 +22,16 @@ void ARunnerGameModeBase::BeginPlay()
 
 void ARunnerGameModeBase::CreateInitialFloorTiles()
 {
-	AFloorTile* Tile = AddFloorTile();
-
-	if (Tile)
-	{
-		LaneSwitchingHorizontalValues.Add(Tile->LeftLaneArrow->GetComponentLocation().Y);
-		LaneSwitchingHorizontalValues.Add(Tile->CenterLaneArrow->GetComponentLocation().Y);
-		LaneSwitchingHorizontalValues.Add(Tile->RightLaneArrow->GetComponentLocation().Y);
-	}
-
-	for (float Val : LaneSwitchingHorizontalValues)
-	{
-		UE_LOG(LogTemp, Warning, TEXT("LaneValue: %f"), Val);
-	}
-
 	for (int i = 0; i < InitialFloorTilesCount; ++i)
 	{
-		AddFloorTile();
+		AFloorTile* Tile  = AddFloorTile();
+
+		if(i == 0 && Tile)
+		{
+				LaneSwitchingHorizontalValues.Add(Tile->LeftLaneArrow->GetComponentLocation().Y);
+				LaneSwitchingHorizontalValues.Add(Tile->CenterLaneArrow->GetComponentLocation().Y);
+				LaneSwitchingHorizontalValues.Add(Tile->RightLaneArrow->GetComponentLocation().Y);
+		}
 	}
 }
 
@@ -52,7 +45,9 @@ AFloorTile* ARunnerGameModeBase::AddFloorTile()
 
 		if (IsValid(TileToSpawn)) // == if(TitleToSpawn)
 		{
-			NextFloorSpawnPoint = TileToSpawn->GetAttachTransform();
+			FTransform const TileTransform = TileToSpawn->AttachPointArrow->GetComponentTransform();
+
+			NextFloorSpawnPoint = TileTransform;
 		}
 
 		return TileToSpawn;
