@@ -19,12 +19,6 @@ class BLOODRUNNER_API AFloorTile : public AActor
 
 public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Components")
-	USceneComponent* SceneComponent;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Components")
-	UStaticMeshComponent* FloorMesh;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Components")
 	UArrowComponent* AttachPointArrow;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Components")
 	UArrowComponent* CenterLaneArrow;
@@ -32,18 +26,9 @@ public:
 	UArrowComponent* LeftLaneArrow;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Components")
 	UArrowComponent* RightLaneArrow;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Components")
-	UBoxComponent* FloorTriggerBox;
-
+	
 	// Sets default values for this actor's properties
 	AFloorTile();
-
-	FORCEINLINE const FTransform& GetAttachTransform() const
-	{
-		return AttachPointArrow->GetComponentTransform();
-	}
-
 
 protected:
 	// Called when the game starts or when spawned
@@ -55,6 +40,19 @@ protected:
 	UPROPERTY()
 	FTimerHandle DestroyTimerHandle;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Components")
+	USceneComponent* SceneComponent;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Components")
+	UStaticMeshComponent* FloorMesh;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Components")
+	UBoxComponent* FloorTriggerBox;
+
+public:
+	// Called every frame
+	virtual void Tick(float DeltaTime) override;
+
 	UFUNCTION()
 	void OnTriggerBoxOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
 	                         UPrimitiveComponent* OtherComp,
@@ -63,7 +61,8 @@ protected:
 	UFUNCTION()
 	void DestroyFloorTile();
 
-public:
-	// Called every frame
-	virtual void Tick(float DeltaTime) override;
+	FORCEINLINE const FTransform& GetAttachTransform() const
+	{
+		return AttachPointArrow->GetComponentTransform();
+	}
 };
