@@ -66,7 +66,7 @@ void AFloorTile::OnTriggerBoxOverlap(UPrimitiveComponent* OverlappedComponent, A
 	{
 		RunnerGameMode->AddFloorTile();
 
-		GetWorldTimerManager().SetTimer(DestroyTimerHandle, this, &AFloorTile::DestroyFloorTile, 2.0f, false);
+		GetWorldTimerManager().SetTimer(DestroyTimerHandle, this, &AFloorTile::DestroyFloorTile, 4.0f, false);
 	}
 }
 
