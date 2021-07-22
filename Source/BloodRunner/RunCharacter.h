@@ -11,7 +11,6 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnPotionsCountChange, int32, Potion
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnHealthBarChange, float, HealthValue);
 
-
 UCLASS()
 class BLOODRUNNER_API ARunCharacter : public ACharacter
 {
@@ -19,8 +18,27 @@ class BLOODRUNNER_API ARunCharacter : public ACharacter
 
 private:
 	UPROPERTY(VisibleInstanceOnly)
-	 class ARunnerGameModeBase* RunnerGameMode;
-	
+	class ARunnerGameModeBase* RunnerGameMode;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Components", meta = (AllowPrivateAccess = "true"))
+	class USpringArmComponent* CameraArmComponent;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Components", meta = (AllowPrivateAccess = "true"))
+	class UCameraComponent* CameraComponent;
+
+	UPROPERTY(VisibleAnywhere, Category="Movement")
+	bool bIsPressingForwardAxis;
+
+	UFUNCTION(Category="MyCamera")
+	void SetupCamera();
+	UPROPERTY(VisibleAnywhere, Category="MyCamera")
+	bool bCameraCanFollow;
+	UPROPERTY(VisibleAnywhere,Category="MyCamera")
+	FVector InitialCameraOffset;
+	UPROPERTY(EditAnywhere, Category="MyCamera")
+	float NotFollowingInitialSeconds;
+	UPROPERTY(EditAnywhere, Category="MyCamera")
+	float NotFollowingMaxSeconds;
+
 public:
 	// Sets default values for this character's properties
 	ARunCharacter();
@@ -32,6 +50,17 @@ protected:
 	UPROPERTY(VisibleAnywhere, Category="Components")
 	class UGameHud* GameHud;
 
+	UPROPERTY(VisibleInstanceOnly, BlueprintReadWrite, Category="LaneSwitch")
+	int32 CurrentLane;
+	UPROPERTY(VisibleInstanceOnly, BlueprintReadWrite, Category="LaneSwitch")
+	int32 NextLane;
+
+	UPROPERTY(EditAnywhere, Category="Movement")
+	float SprintSpeed;
+	UPROPERTY(EditAnywhere, Category="Movement")
+	float WalkSpeed;
+	UPROPERTY(EditAnywhere, Category="Movement")
+	float MoveBackSpeed;
 
 	UPROPERTY(VisibleAnywhere, Category="Health")
 	float MaxHealth;
@@ -57,36 +86,38 @@ public:
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
-	UPROPERTY(VisibleInstanceOnly, BlueprintReadWrite)
-	int32 CurrentLane = 1;
-
-	UPROPERTY(VisibleInstanceOnly, BlueprintReadWrite)
-	int32 NextLane = 0;
-
 	UFUNCTION(BlueprintImplementableEvent, Category="LaneSwitch")
 	void ChangeLane();
-
 	UFUNCTION(BlueprintCallable, Category="LaneSwitch")
 	void ChangeLaneUpdate(float InterpolationValue);
-
 	UFUNCTION(BlueprintCallable, Category="LaneSwitch")
 	void ChangeLaneFinished();
 
-	UFUNCTION(BlueprintCallable)
+	UFUNCTION(BlueprintCallable, Category="MyCamera")
+	float GetNotFollowingMaxSeconds() const;
+	UFUNCTION(BlueprintCallable, Category="MyCamera")
+	void SetNotFollowingMaxSeconds(float const Value);
+
+	UFUNCTION(BlueprintImplementableEvent, Category="CameraAnim")
+	void AnimCamera();
+	UFUNCTION(BlueprintCallable, Category="CameraAnim")
+	void AnimCameraUpdate(float InterpolationValue);
+	UFUNCTION(BlueprintCallable, Category="CameraAnim")
+	void AnimCameraFinished();
+
+	UFUNCTION(BlueprintCallable, Category="Movement")
 	void MoveRight();
-
-	UFUNCTION(BlueprintCallable)
+	UFUNCTION(BlueprintCallable, Category="Movement")
 	void MoveLeft();
-
-	UFUNCTION(BlueprintCallable)
-	void MoveUp();
-
-	UFUNCTION(BlueprintCallable)
-	void MoveDown();
+	UFUNCTION(BlueprintCallable, Category="Movement")
+	void MoveNormal();
+	UFUNCTION(BlueprintCallable, Category="Movement")
+	void MoveFaster();
+	UFUNCTION(BlueprintCallable, Category="Movement")
+	void MoveBack();
 
 	UFUNCTION(BlueprintCallable)
 	void Attack();
-
 	UFUNCTION(BlueprintCallable)
 	void Shoot();
 
