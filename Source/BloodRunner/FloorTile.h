@@ -4,6 +4,8 @@
 
 #include "CoreMinimal.h"
 
+#include "HealthPotionItem.h"
+#include "Obstacle.h"
 #include "Components/ArrowComponent.h"
 #include "GameFramework/Actor.h"
 #include "FloorTile.generated.h"
@@ -17,6 +19,9 @@ class BLOODRUNNER_API AFloorTile : public AActor
 {
 	GENERATED_BODY()
 
+private:
+	int32 ObsCount;
+
 public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Components")
 	UArrowComponent* AttachPointArrow;
@@ -26,7 +31,14 @@ public:
 	UArrowComponent* LeftLaneArrow;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Components")
 	UArrowComponent* RightLaneArrow;
-	
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Config")
+	TSubclassOf<AObstacle> CoffinObstacleClass;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Config")
+	TSubclassOf<AObstacle> CubeObstacleClass;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Config")
+	TSubclassOf<AHealthPotionItem> HealthPotionItemClass;
+
 	// Sets default values for this actor's properties
 	AFloorTile();
 
@@ -42,17 +54,29 @@ protected:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Components")
 	USceneComponent* SceneComponent;
-
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Components")
 	UStaticMeshComponent* FloorMesh;
-
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Components")
 	UBoxComponent* FloorTriggerBox;
 
-public:
-	// Called every frame
-	virtual void Tick(float DeltaTime) override;
+	UPROPERTY(EditAnywhere, Category="Config")
+	float SoulSpawnPercent[2] = {0.f, 0.5f};
+	UPROPERTY(EditAnywhere, Category="Config")
+	float ObstacleSpawnPercent[2] = {0.51f, 0.9f};
+	UPROPERTY(EditAnywhere, Category="Config")
+	float PotionSpawnPercent[2] = {0.93f, 1.f};
+	
+	UPROPERTY(EditAnywhere, Category="Config")
+	float FirstObsSpawnPercent[2] = {0.f, 0.45f};
+	UPROPERTY(EditAnywhere, Category="Config")
+	float SecondObsSpawnPercent[2] = {0.46f, 0.8f};
+	UPROPERTY(EditAnywhere, Category="Config")
+	float ThirdObsSpawnPercent[2] = {0.81f, 1.f};
 
+	UFUNCTION()
+	void SpawnLaneItem(UArrowComponent* Lane);
+
+public:
 	UFUNCTION()
 	void OnTriggerBoxOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
 	                         UPrimitiveComponent* OtherComp,
@@ -60,6 +84,9 @@ public:
 
 	UFUNCTION()
 	void DestroyFloorTile();
+
+	UFUNCTION(BlueprintCallable)
+	void SpawnItems();
 
 	FORCEINLINE const FTransform& GetAttachTransform() const
 	{

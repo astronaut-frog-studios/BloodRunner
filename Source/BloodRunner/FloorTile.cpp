@@ -7,12 +7,12 @@
 #include "RunnerGameModeBase.h"
 #include "Components/BoxComponent.h"
 #include "Kismet/GameplayStatics.h"
+#include "Kismet/KismetMathLibrary.h"
 
 // Sets default values
 AFloorTile::AFloorTile()
 {
-	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
-	PrimaryActorTick.bCanEverTick = true;
+	ObsCount = 0;
 
 	SceneComponent = CreateDefaultSubobject<USceneComponent>(TEXT("Scene"));
 	RootComponent = SceneComponent;
@@ -35,7 +35,7 @@ AFloorTile::AFloorTile()
 	FloorTriggerBox = CreateDefaultSubobject<UBoxComponent>(TEXT("FloorTriggerBox"));
 	FloorTriggerBox->SetupAttachment(SceneComponent);
 	FloorTriggerBox->SetBoxExtent(FVector(32.0f, 500.0f, 200.0f));
-	FloorTriggerBox->SetCollisionProfileName(TEXT("OverlapOnlyPawn"));
+	FloorTriggerBox->SetCollisionProfileName(TEXT("OverlapAll"));
 }
 
 // Called when the game starts or when spawned
@@ -47,13 +47,6 @@ void AFloorTile::BeginPlay()
 	check(RunnerGameMode);
 
 	FloorTriggerBox->OnComponentBeginOverlap.AddDynamic(this, &AFloorTile::OnTriggerBoxOverlap);
-}
-
-
-// Called every frame
-void AFloorTile::Tick(float DeltaTime)
-{
-	Super::Tick(DeltaTime);
 }
 
 void AFloorTile::OnTriggerBoxOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
@@ -70,9 +63,65 @@ void AFloorTile::OnTriggerBoxOverlap(UPrimitiveComponent* OverlappedComponent, A
 	}
 }
 
+void AFloorTile::SpawnItems()
+{
+	if (IsValid(CoffinObstacleClass) && IsValid(CubeObstacleClass) && IsValid(HealthPotionItemClass))
+	{
+		SpawnLaneItem(CenterLaneArrow);
+		SpawnLaneItem(LeftLaneArrow);
+		SpawnLaneItem(RightLaneArrow);
+	}
+}
+
+void AFloorTile::SpawnLaneItem(UArrowComponent* Lane)
+{
+	const float RandomPercentage = FMath::RandRange(0.f, 1.f);
+
+	const FTransform& SpawnTransform = Lane->GetComponentTransform();
+
+	FActorSpawnParameters SpawnParameters;
+	SpawnParameters.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+
+	if (UKismetMathLibrary::InRange_FloatFloat(RandomPercentage, SoulSpawnPercent[0], SoulSpawnPercent[1], true,
+	                                           false) || ObsCount >= 2) //Alma
+	{
+		// TODO: spawnar a alma pra coletar, os pontos
+	}
+	else if (UKismetMathLibrary::InRange_FloatFloat(RandomPercentage, ObstacleSpawnPercent[0], ObstacleSpawnPercent[1], true, false) && ObsCount < 2) //Obs
+	{
+		ObsCount++;
+
+		const float ObstacleRandomPercentage = FMath::RandRange(0.f, 1.f);
+
+		AObstacle* ObstacleToSpawn;
+
+		if (UKismetMathLibrary::InRange_FloatFloat(ObstacleRandomPercentage, FirstObsSpawnPercent[0], FirstObsSpawnPercent[1], true, true)) // Caixao
+		{
+			ObstacleToSpawn = GetWorld()->SpawnActor<AObstacle>(CoffinObstacleClass, SpawnTransform,
+			                                                    SpawnParameters);
+		}
+		else if (UKismetMathLibrary::InRange_FloatFloat(ObstacleRandomPercentage, SecondObsSpawnPercent[0], SecondObsSpawnPercent[1], true, true)) // Obs2
+		{
+			ObstacleToSpawn = GetWorld()->SpawnActor<AObstacle>(CoffinObstacleClass, SpawnTransform,
+			                                                    SpawnParameters);
+		}
+		else if (UKismetMathLibrary::InRange_FloatFloat(ObstacleRandomPercentage, ThirdObsSpawnPercent[0], ThirdObsSpawnPercent[1], true, true)) // Obs3
+		{
+			ObstacleToSpawn = GetWorld()->SpawnActor<AObstacle>(CubeObstacleClass, SpawnTransform,
+			                                                    SpawnParameters);
+		}
+	}
+	else if (UKismetMathLibrary::InRange_FloatFloat(RandomPercentage, PotionSpawnPercent[0], PotionSpawnPercent[1], true, true)) // Pot
+	{
+		AHealthPotionItem* PotionToSpawn = GetWorld()->SpawnActor<AHealthPotionItem>(
+			HealthPotionItemClass, SpawnTransform,
+			SpawnParameters);
+	}
+}
+
 void AFloorTile::DestroyFloorTile()
 {
-	if(DestroyTimerHandle.IsValid())
+	if (DestroyTimerHandle.IsValid())
 	{
 		GetWorldTimerManager().ClearTimer(DestroyTimerHandle);
 	}
