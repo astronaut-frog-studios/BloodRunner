@@ -15,11 +15,11 @@ AHealthPotionItem::AHealthPotionItem()
 
 	SphereCollider = CreateDefaultSubobject<USphereComponent>(TEXT("SphereCollider"));
 	SphereCollider->SetupAttachment(SceneComponent);
-	SphereCollider->SetCollisionProfileName(TEXT("OverlapOnlyPawn"));
+	SphereCollider->SetCollisionProfileName(TEXT("OverlapAll"));
 
 	PotionMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("PotionMesh"));
 	PotionMesh->SetupAttachment(SphereCollider);
-	PotionMesh->SetCollisionProfileName(TEXT("OverlapOnlyPawn"));
+	PotionMesh->SetCollisionProfileName(TEXT("OverlapAll"));
 
 	RotatingMovement = CreateDefaultSubobject<URotatingMovementComponent>(TEXT("RotatingMovement"));
 	RotatingMovement->RotationRate = FRotator(0, 180, 0);
