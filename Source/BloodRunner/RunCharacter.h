@@ -1,5 +1,3 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
 #pragma once
 
 #include "CoreMinimal.h"
@@ -25,21 +23,33 @@ private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Components", meta = (AllowPrivateAccess = "true"))
 	class UCameraComponent* CameraComponent;
 
-	UPROPERTY(VisibleAnywhere, Category="Movement")
+	UPROPERTY(VisibleInstanceOnly, Category="Movement")
 	bool bIsPressingForwardAxis;
+
+	UPROPERTY(VisibleInstanceOnly, Category="Health")
+	bool bIsDead;
 
 	UFUNCTION(Category="MyCamera")
 	void SetupCamera();
 	UPROPERTY(VisibleAnywhere, Category="MyCamera")
 	bool bCameraCanFollow;
-	UPROPERTY(VisibleAnywhere,Category="MyCamera")
+	UPROPERTY(EditAnywhere, Category="MyCamera")
 	FVector InitialCameraOffset;
 	UPROPERTY(EditAnywhere, Category="MyCamera")
 	float NotFollowingInitialSeconds;
 	UPROPERTY(EditAnywhere, Category="MyCamera")
 	float NotFollowingMaxSeconds;
+	
+	UPROPERTY()
+	FTimerHandle RestartTimeHandler;
 
+	UPROPERTY()
+	FTimerHandle DamageTimeHandler;
+	
 public:
+	UPROPERTY(VisibleAnywhere, Category="Health")
+	float MaxHealth;
+	
 	// Sets default values for this character's properties
 	ARunCharacter();
 
@@ -49,6 +59,13 @@ protected:
 
 	UPROPERTY(VisibleAnywhere, Category="Components")
 	class UGameHud* GameHud;
+
+	UPROPERTY(EditAnywhere,BlueprintReadOnly, Category="Assets")
+	class UParticleSystem* DeathParticleSystem;
+	UPROPERTY(EditAnywhere,BlueprintReadOnly, Category="Assets")
+	class USoundBase* DeathSound;
+	UPROPERTY(EditAnywhere,BlueprintReadOnly, Category="Assets")
+	class USoundBase* HitSound;
 
 	UPROPERTY(VisibleInstanceOnly, BlueprintReadWrite, Category="LaneSwitch")
 	int32 CurrentLane;
@@ -62,8 +79,6 @@ protected:
 	UPROPERTY(EditAnywhere, Category="Movement")
 	float MoveBackSpeed;
 
-	UPROPERTY(VisibleAnywhere, Category="Health")
-	float MaxHealth;
 	UPROPERTY(EditAnywhere, Category="Health")
 	float PlayerHealth;
 
@@ -75,9 +90,27 @@ protected:
 	float AmountToHeal;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Potions")
 	class USoundBase* HealingSound;
-
+	
 	UPROPERTY(EditAnywhere)
 	FName LevelToLoad;
+
+private:
+	UFUNCTION( Category="Movement")
+	void MoveRight();
+	UFUNCTION(Category="Movement")
+	void MoveLeft();
+	UFUNCTION(Category="Movement")
+	void MoveNormal();
+	UFUNCTION(Category="Movement")
+	void MoveFaster();
+	UFUNCTION(Category="Movement")
+	void MoveBack();
+
+	UFUNCTION(Category="Health")
+	void OnDeath();
+
+	UFUNCTION()
+	void PushBackOnDamage();
 
 public:
 	// Called every frame
@@ -105,38 +138,37 @@ public:
 	UFUNCTION(BlueprintCallable, Category="CameraAnim")
 	void AnimCameraFinished();
 
-	UFUNCTION(BlueprintCallable, Category="Movement")
-	void MoveRight();
-	UFUNCTION(BlueprintCallable, Category="Movement")
-	void MoveLeft();
-	UFUNCTION(BlueprintCallable, Category="Movement")
-	void MoveNormal();
-	UFUNCTION(BlueprintCallable, Category="Movement")
-	void MoveFaster();
-	UFUNCTION(BlueprintCallable, Category="Movement")
-	void MoveBack();
+	UFUNCTION(BlueprintImplementableEvent, Category="DamageCamera")
+void AnimDamageCamera();
+	UFUNCTION(BlueprintCallable, Category="DamageCamera")
+	void DamageCameraUpdate(float const InterpolationValue) const;
+	UFUNCTION(BlueprintCallable, Category="DamageCamera")
+	void DamageCameraFinished() const;
 
 	UFUNCTION(BlueprintCallable)
 	void Attack();
 	UFUNCTION(BlueprintCallable)
 	void Shoot();
 
-	UFUNCTION(BlueprintCallable)
-	void HealPlayer();
-
-	UFUNCTION(BlueprintCallable)
+	UFUNCTION(BlueprintCallable, Category="Health")
 	float GetPlayerHealth() const;
-	UFUNCTION(BlueprintCallable)
+	UFUNCTION(BlueprintCallable, Category="Health")
 	void IncrementPlayerHealth(float Health = 0.1f);
-	UFUNCTION(BlueprintCallable)
+	UFUNCTION(BlueprintCallable, Category="Health")
 	void SetPlayerHealth(float Health);
+	UFUNCTION(BlueprintCallable, Category="Health")
+	void OnHitReceived(float const Damage);
+	UFUNCTION(BlueprintCallable, Category="Health")
+	void Death();
 
-	UFUNCTION(BlueprintCallable)
+	UFUNCTION(BlueprintCallable, Category="Potions")
 	float GetHealthPotions() const;
-	UFUNCTION(BlueprintCallable)
+	UFUNCTION(BlueprintCallable, Category="Potions")
 	void IncrementHealthPotions(int HealthPotion = 1);
-	UFUNCTION(BlueprintCallable)
+	UFUNCTION(BlueprintCallable, Category="Potions")
 	void SetHealthPotions(int Potions);
+	UFUNCTION(BlueprintCallable, Category="Potions")
+	void HealPlayer();
 
 	UPROPERTY(BlueprintAssignable, BlueprintCallable, Category="Delegates")
 	FOnPotionsCountChange OnPotionsCountChange;
