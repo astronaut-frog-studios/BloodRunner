@@ -7,7 +7,9 @@
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnPotionsCountChange, int32, PotionsCount);
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnHealthBarChange, float, HealthValue);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnHealthBarHeal, float, HealthValue);
+
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnHealthBarMaxHealth);
 
 UCLASS()
 class BLOODRUNNER_API ARunCharacter : public ACharacter
@@ -39,17 +41,14 @@ private:
 	float NotFollowingInitialSeconds;
 	UPROPERTY(EditAnywhere, Category="MyCamera")
 	float NotFollowingMaxSeconds;
-	
+
 	UPROPERTY()
 	FTimerHandle RestartTimeHandler;
 
 	UPROPERTY()
 	FTimerHandle DamageTimeHandler;
-	
+
 public:
-	UPROPERTY(VisibleAnywhere, Category="Health")
-	float MaxHealth;
-	
 	// Sets default values for this character's properties
 	ARunCharacter();
 
@@ -60,11 +59,11 @@ protected:
 	UPROPERTY(VisibleAnywhere, Category="Components")
 	class UGameHud* GameHud;
 
-	UPROPERTY(EditAnywhere,BlueprintReadOnly, Category="Assets")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Assets")
 	class UParticleSystem* DeathParticleSystem;
-	UPROPERTY(EditAnywhere,BlueprintReadOnly, Category="Assets")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Assets")
 	class USoundBase* DeathSound;
-	UPROPERTY(EditAnywhere,BlueprintReadOnly, Category="Assets")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Assets")
 	class USoundBase* HitSound;
 
 	UPROPERTY(VisibleInstanceOnly, BlueprintReadWrite, Category="LaneSwitch")
@@ -79,7 +78,9 @@ protected:
 	UPROPERTY(EditAnywhere, Category="Movement")
 	float MoveBackSpeed;
 
-	UPROPERTY(EditAnywhere, Category="Health")
+	UPROPERTY(VisibleAnywhere, Category="Health")
+	float MaxHealth;
+	UPROPERTY(VisibleAnywhere, Category="Health")
 	float PlayerHealth;
 
 	UPROPERTY(EditAnywhere, Category="Potions")
@@ -90,12 +91,12 @@ protected:
 	float AmountToHeal;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Potions")
 	class USoundBase* HealingSound;
-	
+
 	UPROPERTY(EditAnywhere)
 	FName LevelToLoad;
 
 private:
-	UFUNCTION( Category="Movement")
+	UFUNCTION(Category="Movement")
 	void MoveRight();
 	UFUNCTION(Category="Movement")
 	void MoveLeft();
@@ -139,7 +140,7 @@ public:
 	void AnimCameraFinished();
 
 	UFUNCTION(BlueprintImplementableEvent, Category="DamageCamera")
-void AnimDamageCamera();
+	void AnimDamageCamera();
 	UFUNCTION(BlueprintCallable, Category="DamageCamera")
 	void DamageCameraUpdate(float const InterpolationValue) const;
 	UFUNCTION(BlueprintCallable, Category="DamageCamera")
@@ -153,9 +154,15 @@ void AnimDamageCamera();
 	UFUNCTION(BlueprintCallable, Category="Health")
 	float GetPlayerHealth() const;
 	UFUNCTION(BlueprintCallable, Category="Health")
+	float GetPlayerRelativeHealth() const;
+	UFUNCTION(BlueprintCallable, Category="Health")
+	float GetPlayerMaxHealth() const;
+	UFUNCTION(BlueprintCallable, Category="Health")
 	void IncrementPlayerHealth(float Health = 0.1f);
 	UFUNCTION(BlueprintCallable, Category="Health")
 	void SetPlayerHealth(float Health);
+	UFUNCTION(BlueprintCallable, Category="Health")
+	void UpgradeMaxHealth();
 	UFUNCTION(BlueprintCallable, Category="Health")
 	void OnHitReceived(float const Damage);
 	UFUNCTION(BlueprintCallable, Category="Health")
@@ -174,5 +181,8 @@ void AnimDamageCamera();
 	FOnPotionsCountChange OnPotionsCountChange;
 
 	UPROPERTY(BlueprintAssignable, BlueprintCallable, Category="Delegates")
-	FOnHealthBarChange OnHealthBarChange;
+	FOnHealthBarHeal OnHealthBarHeal;
+
+	UPROPERTY(BlueprintAssignable, BlueprintCallable, Category="Delegates")
+	FOnHealthBarMaxHealth OnHealthBarMaxHealth;
 };
