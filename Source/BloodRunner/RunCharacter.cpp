@@ -14,8 +14,9 @@ ARunCharacter::ARunCharacter()
 	PrimaryActorTick.bCanEverTick = true;
 
 	bCameraCanFollow = true;
-	NotFollowingInitialSeconds = 2.8f;
-	InitialCameraOffset = FVector(-500.0, 0.f, 400);
+	bIsDead = false;
+	NotFollowingInitialSeconds = 2.f;
+	InitialCameraOffset = FVector(-550.0, 0.f, 640);
 	NotFollowingMaxSeconds = NotFollowingInitialSeconds;
 
 	MaxHealth = 1.f;
@@ -25,8 +26,8 @@ ARunCharacter::ARunCharacter()
 	MaxHealthPotions = 6;
 	CurrentLane = 1;
 	NextLane = 0;
-	SprintSpeed = 1200;
-	WalkSpeed = 600;
+	SprintSpeed = 1500;
+	WalkSpeed = 800;
 	MoveBackSpeed = 200;
 
 	SetupCamera();
@@ -35,6 +36,8 @@ ARunCharacter::ARunCharacter()
 void ARunCharacter::BeginPlay()
 {
 	Super::BeginPlay();
+
+	GetCharacterMovement()->MaxWalkSpeed = WalkSpeed;
 
 	CameraArmComponent->SetAbsolute(true);
 
@@ -66,39 +69,121 @@ void ARunCharacter::Tick(float const DeltaTime)
 	{
 		SetNotFollowingMaxSeconds(GetNotFollowingMaxSeconds() - DeltaTime);
 
-		if(NotFollowingMaxSeconds <= 0)
+		if (NotFollowingMaxSeconds <= 0)
 		{
 			AnimCamera();
 		}
 	}
 }
 
+#pragma region Death
+void ARunCharacter::OnHitReceived(float const Damage)
+{
+	IncrementPlayerHealth(-Damage);
+
+	static FVector Impulse = FVector(-5000.f, 0, 0);
+
+	GetCharacterMovement()->AddImpulse(Impulse, true);
+	if(bCameraCanFollow)
+	{
+		CameraArmComponent->TargetOffset.X = InitialCameraOffset.X - 300;
+		GetCapsuleComponent()->SetCollisionProfileName(TEXT("Invencible"));
+		GetWorldTimerManager().SetTimer(DamageTimeHandler, this, &ARunCharacter::PushBackOnDamage, 1.3f, false);
+		AnimDamageCamera();
+	}
+
+	if (HitSound)
+	{
+		UGameplayStatics::PlaySoundAtLocation(GetWorld(), HitSound, GetActorLocation());
+	}
+
+	if (GetPlayerHealth() <= 0.f)
+	{
+		Death();
+	}
+}
+
+void ARunCharacter::PushBackOnDamage()
+{
+	GetCapsuleComponent()->SetCollisionProfileName(TEXT("Pawn"));
+	
+	if (DamageTimeHandler.IsValid())
+	{
+		GetWorldTimerManager().ClearTimer(DamageTimeHandler);
+	}
+}
+
+void ARunCharacter::Death()
+{
+	if (!bIsDead)
+	{
+		const FVector PlayerLocation = GetActorLocation();
+
+		UWorld* World = GetWorld();
+
+		if (World)
+		{
+			bIsDead = true;
+			DisableInput(nullptr);
+			GetCharacterMovement()->MaxWalkSpeed = 0;
+
+			if (DeathParticleSystem) //TODO: Death effect, Bloodborne deadh effect on screen
+			{
+				UGameplayStatics::SpawnEmitterAtLocation(World, DeathParticleSystem, PlayerLocation);
+			}
+
+			if (DeathSound)
+			{
+				UGameplayStatics::PlaySoundAtLocation(World, DeathSound, PlayerLocation);
+			}
+
+			GetMesh()->SetVisibility(false);
+
+			World->GetTimerManager().SetTimer(RestartTimeHandler, this, &ARunCharacter::OnDeath, 2.0f);
+		}
+	}
+}
+
+void ARunCharacter::OnDeath()
+{
+	bIsDead = false;
+
+	if (RestartTimeHandler.IsValid())
+	{
+		GetWorldTimerManager().ClearTimer(RestartTimeHandler);
+	}
+
+	UKismetSystemLibrary::ExecuteConsoleCommand(GetWorld(), TEXT("RestartLevel"));
+}
+
+#pragma endregion Death
+
 #pragma region Camera
 void ARunCharacter::SetupCamera()
 {
 	CameraArmComponent = CreateDefaultSubobject<USpringArmComponent>(TEXT("CameraArm"));
-	CameraArmComponent->TargetArmLength = 450.f;
+	CameraArmComponent->TargetArmLength = 460.f;
 	CameraArmComponent->TargetOffset = InitialCameraOffset;
 	CameraArmComponent->bUsePawnControlRotation = true;
 	CameraArmComponent->SetupAttachment(GetRootComponent());
 
 	CameraComponent = CreateDefaultSubobject<UCameraComponent>(TEXT("Camera"));
 	CameraComponent->bUsePawnControlRotation = false;
-	CameraComponent->SetFieldOfView(45.f);
+	CameraComponent->SetFieldOfView(50.f);
 	FRotator const CameraRotator = CameraComponent->GetComponentRotation();
-	CameraComponent->SetWorldRotation(FRotator(-12.5f, CameraRotator.Yaw, CameraRotator.Roll));
+	CameraComponent->SetWorldRotation(FRotator(-20.f, CameraRotator.Yaw, CameraRotator.Roll));
 	CameraComponent->SetupAttachment(CameraArmComponent, USpringArmComponent::SocketName);
 }
 
 void ARunCharacter::AnimCameraUpdate(float const InterpolationValue)
- {
- 	FVector CameraArmLocation = CameraArmComponent->GetComponentLocation();
- 	CameraArmLocation.X = FMath::Lerp(CameraArmLocation.X, GetActorLocation().X, InterpolationValue);
- 
- 	CameraArmComponent->SetWorldLocation(CameraArmLocation);
+{
+	FVector CameraArmLocation = CameraArmComponent->GetComponentLocation();
+	CameraArmLocation.X = FMath::Lerp(CameraArmLocation.X, GetActorLocation().X, InterpolationValue);
+
+	CameraArmComponent->SetWorldLocation(CameraArmLocation);
 
 	SetNotFollowingMaxSeconds(NotFollowingInitialSeconds);
- }
+}
 
 void ARunCharacter::AnimCameraFinished()
 {
@@ -113,6 +198,18 @@ float ARunCharacter::GetNotFollowingMaxSeconds() const
 void ARunCharacter::SetNotFollowingMaxSeconds(float const Value)
 {
 	NotFollowingMaxSeconds = Value;
+}
+
+void ARunCharacter::DamageCameraUpdate(float const InterpolationValue) const
+{
+	FVector NewCameraArmOffset = CameraArmComponent->TargetOffset;
+	NewCameraArmOffset.X = FMath::Lerp(NewCameraArmOffset.X, InitialCameraOffset.X, InterpolationValue);
+
+	CameraArmComponent->TargetOffset = NewCameraArmOffset;
+}
+
+void ARunCharacter::DamageCameraFinished() const
+{
 }
 #pragma endregion Camera
 
