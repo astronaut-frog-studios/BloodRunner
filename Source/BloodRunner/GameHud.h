@@ -31,8 +31,11 @@ public:
 	void InitializeGameHudPlayer(ARunCharacter* RunCharacter);
 
 	UFUNCTION(BlueprintCallable)
-	void SetPotionsCount(int32 Count);
+	void SetPotionsCount(int32 const Count);
 
 	UFUNCTION(BlueprintCallable)
-	void SetHealth(float Count);
+	void SetHealth(float const Count);
+
+	UFUNCTION(BlueprintCallable)
+	void UpgradeMaxHealth();
 };
