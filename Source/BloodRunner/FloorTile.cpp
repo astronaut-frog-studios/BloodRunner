@@ -65,7 +65,7 @@ void AFloorTile::OnTriggerBoxOverlap(UPrimitiveComponent* OverlappedComponent, A
 
 void AFloorTile::SpawnItems()
 {
-	if (IsValid(CoffinObstacleClass) && IsValid(CubeObstacleClass) && IsValid(HealthPotionItemClass))
+	if (IsValid(CoffinObstacleClass) && IsValid(CartObstacleClass) && IsValid(PostObstacleClass) && IsValid(HealthPotionItemClass))
 	{
 		SpawnLaneItem(CenterLaneArrow);
 		SpawnLaneItem(LeftLaneArrow);
@@ -102,12 +102,12 @@ void AFloorTile::SpawnLaneItem(UArrowComponent* Lane)
 		}
 		else if (UKismetMathLibrary::InRange_FloatFloat(ObstacleRandomPercentage, SecondObsSpawnPercent[0], SecondObsSpawnPercent[1], true, true)) // Obs2
 		{
-			ObstacleToSpawn = GetWorld()->SpawnActor<AObstacle>(CoffinObstacleClass, SpawnTransform,
+			ObstacleToSpawn = GetWorld()->SpawnActor<AObstacle>(CartObstacleClass, SpawnTransform,
 			                                                    SpawnParameters);
 		}
 		else if (UKismetMathLibrary::InRange_FloatFloat(ObstacleRandomPercentage, ThirdObsSpawnPercent[0], ThirdObsSpawnPercent[1], true, true)) // Obs3
 		{
-			ObstacleToSpawn = GetWorld()->SpawnActor<AObstacle>(CubeObstacleClass, SpawnTransform,
+			ObstacleToSpawn = GetWorld()->SpawnActor<AObstacle>(PostObstacleClass, SpawnTransform,
 			                                                    SpawnParameters);
 		}
 	}

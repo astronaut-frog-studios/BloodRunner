@@ -35,7 +35,9 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Config")
 	TSubclassOf<AObstacle> CoffinObstacleClass;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Config")
-	TSubclassOf<AObstacle> CubeObstacleClass;
+	TSubclassOf<AObstacle> CartObstacleClass;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Config")
+	TSubclassOf<AObstacle> PostObstacleClass;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Config")
 	TSubclassOf<AHealthPotionItem> HealthPotionItemClass;
 
