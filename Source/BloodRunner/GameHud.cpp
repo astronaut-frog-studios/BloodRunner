@@ -13,17 +13,27 @@ void UGameHud::InitializeGameHudPlayer(ARunCharacter* RunCharacter)
 		HealthBar->SetPercent(RunCharacter->GetPlayerHealth());
 
 		RunCharacter->OnPotionsCountChange.AddDynamic(this, &UGameHud::SetPotionsCount);
-		RunCharacter->OnHealthBarChange.AddDynamic(this, &UGameHud::SetHealth);
+		RunCharacter->OnHealthBarHeal.AddDynamic(this, &UGameHud::SetHealth);
+		RunCharacter->OnHealthBarMaxHealth.AddDynamic(this, &UGameHud::UpgradeMaxHealth);
 	}
 }
 
-void UGameHud::SetPotionsCount(int32 Count)
+void UGameHud::SetPotionsCount(int32 const Count) 
 {
 	PotionsCount->SetText(FText::AsNumber(Count));
 }
 
-void UGameHud::SetHealth(float Count)
+void UGameHud::SetHealth(float const Count) 
 {
 	HealthBar->SetPercent(Count);
+}
+
+void UGameHud::UpgradeMaxHealth()
+{
+	FVector2D const HealthBarTranslation =  HealthBar->RenderTransform.Translation;
+	FVector2D const HealthBarScale = HealthBar->RenderTransform.Scale;
+
+	HealthBar->SetRenderScale(FVector2D(HealthBarScale.X + 0.2f, HealthBarScale.Y));
+	HealthBar->SetRenderTranslation(FVector2D(HealthBarTranslation.X + 24.f, HealthBarTranslation.Y));
 }
 
