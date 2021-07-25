@@ -16,7 +16,7 @@ ARunCharacter::ARunCharacter()
 	bCameraCanFollow = true;
 	bIsDead = false;
 	NotFollowingInitialSeconds = 2.f;
-	InitialCameraOffset = FVector(-550.0, 0.f, 640);
+	InitialCameraOffset = FVector(-540.0, 0.f, 680);
 	NotFollowingMaxSeconds = NotFollowingInitialSeconds;
 
 	MaxHealth = 1.f;
@@ -308,14 +308,14 @@ void ARunCharacter::Shoot()
 
 #pragma region PlayerHealth
 void ARunCharacter::HealPlayer()
-{
+{	
 	if (HealthPotions == 0) return;
-
+	
 	if (PlayerHealth < MaxHealth)
 	{
 		IncrementPlayerHealth(AmountToHeal);
 		IncrementHealthPotions(-1);
-
+	
 		if (HealingSound)
 		{
 			UGameplayStatics::PlaySoundAtLocation(GetWorld(), HealingSound, GetActorLocation());
@@ -326,14 +326,25 @@ void ARunCharacter::HealPlayer()
 		SetPlayerHealth(MaxHealth);
 	}
 
-	OnHealthBarChange.Broadcast(PlayerHealth);
+	OnHealthBarHeal.Broadcast(GetPlayerRelativeHealth());
+}
+
+void ARunCharacter::UpgradeMaxHealth()
+{
+	if(MaxHealth >= 2.4f)
+	{
+		return;
+	}
+		MaxHealth += 0.3;
+
+		OnHealthBarMaxHealth.Broadcast();
 }
 
 void ARunCharacter::IncrementPlayerHealth(float const Health)
 {
 	PlayerHealth += Health;
 
-	OnHealthBarChange.Broadcast(PlayerHealth);
+	OnHealthBarHeal.Broadcast(GetPlayerRelativeHealth());
 
 	if (PlayerHealth <= 0.01f)
 	{
@@ -344,6 +355,16 @@ void ARunCharacter::IncrementPlayerHealth(float const Health)
 			UGameplayStatics::OpenLevel(this, LevelToLoad);
 		}
 	}
+}
+
+float ARunCharacter::GetPlayerRelativeHealth() const
+{
+	return PlayerHealth / MaxHealth;
+}
+
+float ARunCharacter::GetPlayerMaxHealth() const
+{
+	return MaxHealth;
 }
 
 float ARunCharacter::GetPlayerHealth() const
