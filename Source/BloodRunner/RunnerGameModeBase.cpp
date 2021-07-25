@@ -24,18 +24,20 @@ void ARunnerGameModeBase::CreateInitialFloorTiles()
 {
 	for (int i = 0; i < InitialFloorTilesCount; ++i)
 	{
-		AFloorTile* Tile  = AddFloorTile();
+		const bool bCanSpawnItems = (i == 0 || i == 1 || i == 2) ? false: true;
+		
+		AFloorTile* Tile = AddFloorTile(bCanSpawnItems);
 
-		if(i == 0 && Tile)
+		if (i == 0 && Tile)
 		{
-				LaneSwitchingHorizontalValues.Add(Tile->LeftLaneArrow->GetComponentLocation().Y);
-				LaneSwitchingHorizontalValues.Add(Tile->CenterLaneArrow->GetComponentLocation().Y);
-				LaneSwitchingHorizontalValues.Add(Tile->RightLaneArrow->GetComponentLocation().Y);
+			LaneSwitchingHorizontalValues.Add(Tile->LeftLaneArrow->GetComponentLocation().Y);
+			LaneSwitchingHorizontalValues.Add(Tile->CenterLaneArrow->GetComponentLocation().Y);
+			LaneSwitchingHorizontalValues.Add(Tile->RightLaneArrow->GetComponentLocation().Y);
 		}
 	}
 }
 
-AFloorTile* ARunnerGameModeBase::AddFloorTile()
+AFloorTile* ARunnerGameModeBase::AddFloorTile(const bool bSpawnItems)
 {
 	UWorld* CurrentWorld = GetWorld();
 
@@ -45,6 +47,11 @@ AFloorTile* ARunnerGameModeBase::AddFloorTile()
 
 		if (IsValid(TileToSpawn)) // == if(TitleToSpawn)
 		{
+			if(bSpawnItems)
+			{
+				TileToSpawn->SpawnItems();
+			}
+			
 			FTransform const TileTransform = TileToSpawn->AttachPointArrow->GetComponentTransform();
 
 			NextFloorSpawnPoint = TileTransform;
