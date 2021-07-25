@@ -32,7 +32,9 @@ void AObstacle::OnObstacleHit(UPrimitiveComponent* OverlappedComponent, AActor* 
 
 		if (IsValid(RunCharacter))
 		{
-			RunCharacter->OnHitReceived(DamageToPlayer);
+			float const RelativeDamage = DamageToPlayer / RunCharacter->GetPlayerMaxHealth();
+			
+			RunCharacter->OnHitReceived(RelativeDamage);
 		}
 	}
 }
