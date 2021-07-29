@@ -17,7 +17,7 @@ class BLOODRUNNER_API ARunnerGameModeBase : public AGameModeBase
 	GENERATED_BODY()
 
 protected:
-	virtual void BeginPlay() override;
+	virtual void BeginPlay() override;	
 
 public:
 	UPROPERTY(EditAnywhere, Category="Config")
@@ -37,6 +37,11 @@ public:
 
 	UPROPERTY(EditAnywhere, Category="Runtime")
 	TArray<float> LaneSwitchingHorizontalValues;
+
+	UPROPERTY(EditAnywhere, Category="Runtime")
+	int FloorTilesCount;
+	UFUNCTION(BlueprintCallable, Category="Runtime")
+	bool BIsFloorTileCountDividedByTen() const;
 	
 	UFUNCTION(BlueprintCallable)
 	void CreateInitialFloorTiles();
