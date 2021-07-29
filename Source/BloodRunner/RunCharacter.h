@@ -11,6 +11,8 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnHealthBarHeal, float, HealthValue
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnHealthBarMaxHealth);
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnStaminaUse, float, StaminaValue);
+
 UCLASS()
 class BLOODRUNNER_API ARunCharacter : public ACharacter
 {
@@ -25,14 +27,26 @@ private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Components", meta = (AllowPrivateAccess = "true"))
 	class UCameraComponent* CameraComponent;
 
+	UPROPERTY(VisibleInstanceOnly)
+	bool bCanInitHud;
+	UFUNCTION()
+	void InitGameHud();
+	
 	UPROPERTY(VisibleInstanceOnly, Category="Movement")
 	bool bIsPressingForwardAxis;
 
 	UPROPERTY(VisibleInstanceOnly, Category="Health")
 	bool bIsDead;
 
+	UPROPERTY(VisibleInstanceOnly, Category="Stamina")
+	bool bCanRegenStamina;
+	UFUNCTION(Category="Stamina")
+	void CheckPlayerStamina();
+
 	UFUNCTION(Category="MyCamera")
 	void SetupCamera();
+	UFUNCTION(Category="MyCamera")
+	void CameraFollowPlayer(float const DeltaTime);
 	UPROPERTY(VisibleAnywhere, Category="MyCamera")
 	bool bCameraCanFollow;
 	UPROPERTY(EditAnywhere, Category="MyCamera")
@@ -48,6 +62,9 @@ private:
 	UPROPERTY()
 	FTimerHandle DamageTimeHandler;
 
+	UPROPERTY()
+	FTimerHandle StaminaRegenTimeHandler;
+
 public:
 	// Sets default values for this character's properties
 	ARunCharacter();
@@ -55,9 +72,6 @@ public:
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
-
-	UPROPERTY(VisibleAnywhere, Category="Components")
-	class UGameHud* GameHud;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Assets")
 	class UParticleSystem* DeathParticleSystem;
@@ -72,6 +86,8 @@ protected:
 	int32 NextLane;
 
 	UPROPERTY(EditAnywhere, Category="Movement")
+	float MaxSpeed;
+	UPROPERTY(EditAnywhere, Category="Movement")
 	float SprintSpeed;
 	UPROPERTY(EditAnywhere, Category="Movement")
 	float WalkSpeed;
@@ -82,6 +98,15 @@ protected:
 	float MaxHealth;
 	UPROPERTY(VisibleAnywhere, Category="Health")
 	float PlayerHealth;
+
+	UPROPERTY(VisibleAnywhere, Category="Stamina")
+	float MaxStamina;
+	UPROPERTY(VisibleAnywhere, Category="Stamina")
+	float PlayerStamina;
+	UPROPERTY(VisibleAnywhere, Category="Stamina")
+	float PlayerStaminaRegen;
+	UPROPERTY(VisibleAnywhere, Category="Stamina")
+	float PlayerStaminaConsume;
 
 	UPROPERTY(EditAnywhere, Category="Potions")
 	int32 MaxHealthPotions;
@@ -126,6 +151,8 @@ public:
 	void ChangeLaneUpdate(float InterpolationValue);
 	UFUNCTION(BlueprintCallable, Category="LaneSwitch")
 	void ChangeLaneFinished();
+
+	void IncrementSpeeds();
 
 	UFUNCTION(BlueprintCallable, Category="MyCamera")
 	float GetNotFollowingMaxSeconds() const;
@@ -177,6 +204,28 @@ public:
 	UFUNCTION(BlueprintCallable, Category="Potions")
 	void HealPlayer();
 
+	UFUNCTION(BlueprintCallable)
+	int32 GetPontos() const;
+	UFUNCTION(BlueprintCallable)
+	void IncrementPontos(int32 const Value = 3);
+	UFUNCTION(BlueprintCallable)
+	void SetPontos(int32 const Value = 3);
+	UPROPERTY(BlueprintReadWrite)
+	int32 Pontos;
+
+	UFUNCTION(BlueprintCallable, Category="Stamina")
+	float GetPlayerStamina() const;
+	UFUNCTION(BlueprintCallable, Category="Stamina")
+	float GetPlayerMaxStamina() const;
+	UFUNCTION(BlueprintCallable, Category="Stamina")
+	float GetPlayerRelativeStamina() const;
+	UFUNCTION(BlueprintCallable, Category="Stamina")
+	void IncrementPlayerStamina(float Stamina = 0.1f);
+	UFUNCTION(BlueprintCallable, Category="Stamina")
+	void SetPlayerStamina(float Stamina);
+	UFUNCTION(BlueprintCallable, Category="Stamina")
+	void StartStaminaRegen();
+
 	UPROPERTY(BlueprintAssignable, BlueprintCallable, Category="Delegates")
 	FOnPotionsCountChange OnPotionsCountChange;
 
@@ -185,4 +234,7 @@ public:
 
 	UPROPERTY(BlueprintAssignable, BlueprintCallable, Category="Delegates")
 	FOnHealthBarMaxHealth OnHealthBarMaxHealth;
+
+	UPROPERTY(BlueprintAssignable, BlueprintCallable, Category="Delegates")
+	FOnStaminaUse OnStaminaUse;
 };
