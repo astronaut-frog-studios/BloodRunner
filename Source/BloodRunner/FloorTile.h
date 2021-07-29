@@ -6,6 +6,7 @@
 
 #include "HealthPotionItem.h"
 #include "Obstacle.h"
+#include "PointItem.h"
 #include "Components/ArrowComponent.h"
 #include "GameFramework/Actor.h"
 #include "FloorTile.generated.h"
@@ -32,6 +33,8 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Components")
 	UArrowComponent* RightLaneArrow;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Config")
+	TSubclassOf<APointItem> SoulPointClass;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Config")
 	TSubclassOf<AObstacle> CoffinObstacleClass;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Config")
@@ -62,11 +65,11 @@ protected:
 	UBoxComponent* FloorTriggerBox;
 
 	UPROPERTY(EditAnywhere, Category="Config")
-	float SoulSpawnPercent[2] = {0.f, 0.5f};
+	float SoulSpawnPercent[2] = {0.32f, 0.59f};
 	UPROPERTY(EditAnywhere, Category="Config")
-	float ObstacleSpawnPercent[2] = {0.51f, 0.9f};
+	float ObstacleSpawnPercent[2] = {0.6f, 0.9f};
 	UPROPERTY(EditAnywhere, Category="Config")
-	float PotionSpawnPercent[2] = {0.93f, 1.f};
+	float PotionSpawnPercent[2] = {0.98f, 1.f};
 	
 	UPROPERTY(EditAnywhere, Category="Config")
 	float FirstObsSpawnPercent[2] = {0.f, 0.45f};
@@ -74,6 +77,9 @@ protected:
 	float SecondObsSpawnPercent[2] = {0.46f, 0.8f};
 	UPROPERTY(EditAnywhere, Category="Config")
 	float ThirdObsSpawnPercent[2] = {0.81f, 1.f};
+	UPROPERTY(EditAnywhere, Category="Config")
+	float SoulItemSpawnOffset = 400;
+
 
 	UFUNCTION()
 	void SpawnLaneItem(UArrowComponent* Lane);
