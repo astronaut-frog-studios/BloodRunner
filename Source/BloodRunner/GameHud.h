@@ -26,16 +26,20 @@ protected:
 	UPROPERTY(BlueprintReadWrite, meta = (BindWidget))
 	class UProgressBar* HealthBar;
 
+	UPROPERTY(BlueprintReadWrite, meta = (BindWidget))
+	class UProgressBar* StaminaBar;
+
 public:
 	UFUNCTION(BlueprintCallable)
 	void InitializeGameHudPlayer(ARunCharacter* RunCharacter);
 
-	UFUNCTION(BlueprintCallable)
+	UFUNCTION(BlueprintCallable, Category="Health")
 	void SetPotionsCount(int32 const Count);
-
-	UFUNCTION(BlueprintCallable)
+	UFUNCTION(BlueprintCallable, Category="Health")
 	void SetHealth(float const Count);
-
-	UFUNCTION(BlueprintCallable)
+	UFUNCTION(BlueprintCallable, Category="Health")
 	void UpgradeMaxHealth();
+
+	UFUNCTION(BlueprintCallable, Category="Stamina")
+	void SetStamina(float const Value);
 };
