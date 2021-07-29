@@ -3,6 +3,8 @@
 #pragma once
 
 #include "CoreMinimal.h"
+
+#include "Components/PointLightComponent.h"
 #include "Components/SphereComponent.h"
 #include "GameFramework/Actor.h"
 #include "PointItem.generated.h"
@@ -11,22 +13,25 @@ UCLASS()
 class BLOODRUNNER_API APointItem : public AActor
 {
 	GENERATED_BODY()
-	
-public:	
+
+public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
-		class USceneComponent* SceneComponent;
+	class USceneComponent* SceneComponent;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
-		class UStaticMeshComponent* ItemMesh;
+	class UStaticMeshComponent* ItemMesh;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
-		class USphereComponent* SphereCollider;
+	class USphereComponent* SphereCollider;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
-		class URotatingMovementComponent* RotatingMovement;
+	class URotatingMovementComponent* RotatingMovement;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
+	class UPointLightComponent* CollectLight;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Components")
-		class USoundBase* PickUpSound;
+	class USoundBase* PickUpSound;
 	// Sets default values for this actor's properties
 	APointItem();
 
@@ -34,8 +39,7 @@ protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
-public:	
+public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
-
 };
