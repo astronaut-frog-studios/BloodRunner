@@ -4,6 +4,7 @@
 #include "HealthPotionItem.h"
 
 #include "RunCharacter.h"
+#include "Components/PointLightComponent.h"
 #include "GameFramework/RotatingMovementComponent.h"
 #include "Kismet/GameplayStatics.h"
 
@@ -23,6 +24,9 @@ AHealthPotionItem::AHealthPotionItem()
 
 	RotatingMovement = CreateDefaultSubobject<URotatingMovementComponent>(TEXT("RotatingMovement"));
 	RotatingMovement->RotationRate = FRotator(0, 180, 0);
+
+	CollectLight = CreateDefaultSubobject<UPointLightComponent>(TEXT("CollectLight"));
+	CollectLight->SetupAttachment(PotionMesh);
 }
 
 // Called when the game starts or when spawned

@@ -26,6 +26,9 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Components")
 	class URotatingMovementComponent* RotatingMovement;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
+	class UPointLightComponent* CollectLight;
+
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Components")
 	class USoundBase* PickUpSound;
 

@@ -19,10 +19,13 @@ APointItem::APointItem()
 
 	ItemMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("ItemMesh"));
 	ItemMesh->SetupAttachment(SphereCollider);
-	ItemMesh->SetCollisionProfileName(TEXT("OverlapAll"));
+	ItemMesh->SetCollisionProfileName(TEXT("NoCollision"));
 
 	RotatingMovement = CreateDefaultSubobject<URotatingMovementComponent>(TEXT("RotatingMovement"));
 	RotatingMovement->RotationRate = FRotator(0, 180, 0);
+
+	CollectLight = CreateDefaultSubobject<UPointLightComponent>(TEXT("CollectLight"));
+	CollectLight->SetupAttachment(ItemMesh);
 }
 
 // Called when the game starts or when spawned
