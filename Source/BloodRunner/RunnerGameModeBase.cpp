@@ -10,11 +10,12 @@
 
 void ARunnerGameModeBase::BeginPlay()
 {
+	Super::BeginPlay();
+	
 	// UGameplayStatics::GetPlayerController(GetWorld(), 0)->bShowMouseCursor = true;
 
 	GameHud = Cast<UGameHud>(CreateWidget(GetWorld(), GameHudClass));
 	check(GameHud);
-
 	GameHud->AddToViewport();
 
 	CreateInitialFloorTiles();
@@ -24,8 +25,8 @@ void ARunnerGameModeBase::CreateInitialFloorTiles()
 {
 	for (int i = 0; i < InitialFloorTilesCount; ++i)
 	{
-		const bool bCanSpawnItems = (i == 0 || i == 1 || i == 2) ? false: true;
-		
+		const bool bCanSpawnItems = (i == 0 || i == 1 || i == 2) ? false : true;
+
 		AFloorTile* Tile = AddFloorTile(bCanSpawnItems);
 
 		if (i == 0 && Tile)
@@ -47,11 +48,14 @@ AFloorTile* ARunnerGameModeBase::AddFloorTile(const bool bSpawnItems)
 
 		if (IsValid(TileToSpawn)) // == if(TitleToSpawn)
 		{
-			if(bSpawnItems)
+			FloorTilesCount ++;
+			bool bCanSpawnLantern = BIsFloorTileCountDividedByTen();
+
+			if (bSpawnItems)
 			{
 				TileToSpawn->SpawnItems();
 			}
-			
+
 			FTransform const TileTransform = TileToSpawn->AttachPointArrow->GetComponentTransform();
 
 			NextFloorSpawnPoint = TileTransform;
@@ -61,4 +65,15 @@ AFloorTile* ARunnerGameModeBase::AddFloorTile(const bool bSpawnItems)
 	}
 
 	return nullptr;
+}
+
+bool ARunnerGameModeBase::BIsFloorTileCountDividedByTen() const
+{
+	if (FloorTilesCount % 10 == 0)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("É MULTIPLOOOOO"));
+		return true;
+	}
+
+	return false;
 }
