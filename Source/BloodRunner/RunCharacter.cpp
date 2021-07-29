@@ -13,10 +13,13 @@ ARunCharacter::ARunCharacter()
 {
 	PrimaryActorTick.bCanEverTick = true;
 
+	Pontos = 0;
+
 	bCameraCanFollow = true;
 	bIsDead = false;
+	bCanRegenStamina = false;
 	NotFollowingInitialSeconds = 2.f;
-	InitialCameraOffset = FVector(-540.0, 0.f, 680);
+	InitialCameraOffset = FVector(-520.0, 0.f, 700);
 	NotFollowingMaxSeconds = NotFollowingInitialSeconds;
 
 	MaxHealth = 1.f;
@@ -25,7 +28,12 @@ ARunCharacter::ARunCharacter()
 	AmountToHeal = 0.2f;
 	MaxHealthPotions = 6;
 	CurrentLane = 1;
+	MaxStamina = 1.f;
+	PlayerStamina = MaxStamina;
+	PlayerStaminaConsume = 0.005f;
+	PlayerStaminaRegen = 0.002f;
 	NextLane = 0;
+	MaxSpeed = 3200;
 	SprintSpeed = 1500;
 	WalkSpeed = 800;
 	MoveBackSpeed = 200;
@@ -44,35 +52,41 @@ void ARunCharacter::BeginPlay()
 	RunnerGameMode = Cast<ARunnerGameModeBase>(UGameplayStatics::GetGameMode(GetWorld()));
 	check(RunnerGameMode);
 
-	GameHud = RunnerGameMode->GameHud;
-	check(GameHud);
-	GameHud->InitializeGameHudPlayer(this);
+	bCanInitHud = true;
 }
 
 void ARunCharacter::Tick(float const DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	FRotator ControlRotator = GetControlRotation();
-	ControlRotator.Roll = 0.0f;
-	ControlRotator.Pitch = 0.0f;
-	AddMovementInput(ControlRotator.Vector());
+	InitGameHud();
 
-	if (bCameraCanFollow)
-	{
-		FVector const CameraArmLocation = CameraArmComponent->GetComponentLocation();
-		FVector const CameraFollowPlayer = FVector(GetActorLocation().X, CameraArmLocation.Y,
-		                                           CameraArmLocation.Z);
-		CameraArmComponent->SetWorldLocation(CameraFollowPlayer);
-	}
-	else if (!bCameraCanFollow)
-	{
-		SetNotFollowingMaxSeconds(GetNotFollowingMaxSeconds() - DeltaTime);
+	CameraFollowPlayer(DeltaTime);
 
-		if (NotFollowingMaxSeconds <= 0)
-		{
-			AnimCamera();
-		}
+	CheckPlayerStamina();
+}
+
+void ARunCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
+{
+	Super::SetupPlayerInputComponent(PlayerInputComponent);
+
+	PlayerInputComponent->BindAction("Heal", IE_Pressed, this, &ARunCharacter::HealPlayer);
+	PlayerInputComponent->BindAction("Jump", IE_Pressed, this, &ARunCharacter::Jump);
+	PlayerInputComponent->BindAction("Jump", IE_Released, this, &ARunCharacter::StopJumping);
+	PlayerInputComponent->BindAction("MoveToRight", IE_Pressed, this, &ARunCharacter::MoveRight);
+	PlayerInputComponent->BindAction("MoveToLeft", IE_Pressed, this, &ARunCharacter::MoveLeft);
+	PlayerInputComponent->BindAction("MoveUp", IE_Pressed, this, &ARunCharacter::MoveFaster);
+	PlayerInputComponent->BindAction("MoveUp", IE_Released, this, &ARunCharacter::MoveNormal);
+	PlayerInputComponent->BindAction("Shoot", IE_Pressed, this, &ARunCharacter::Shoot);
+	PlayerInputComponent->BindAction("Attack", IE_Pressed, this, &ARunCharacter::Attack);
+}
+
+void ARunCharacter::InitGameHud()
+{
+	if (bCanInitHud)
+	{
+		RunnerGameMode->GameHud->InitializeGameHudPlayer(this);
+		bCanInitHud = false;
 	}
 }
 
@@ -84,10 +98,18 @@ void ARunCharacter::OnHitReceived(float const Damage)
 	static FVector Impulse = FVector(-5000.f, 0, 0);
 
 	GetCharacterMovement()->AddImpulse(Impulse, true);
-	if(bCameraCanFollow)
+
+	if (bCameraCanFollow)
 	{
-		CameraArmComponent->TargetOffset.X = InitialCameraOffset.X - 300;
 		GetCapsuleComponent()->SetCollisionProfileName(TEXT("Invencible"));
+		CameraArmComponent->TargetOffset.X = InitialCameraOffset.X - 300;
+		GetWorldTimerManager().SetTimer(DamageTimeHandler, this, &ARunCharacter::PushBackOnDamage, 1.3f, false);
+		AnimDamageCamera();
+	}
+	else if (!bCameraCanFollow)
+	{
+		GetCapsuleComponent()->SetCollisionProfileName(TEXT("Invencible"));
+		CameraArmComponent->TargetOffset.X = InitialCameraOffset.X - 100;
 		GetWorldTimerManager().SetTimer(DamageTimeHandler, this, &ARunCharacter::PushBackOnDamage, 1.3f, false);
 		AnimDamageCamera();
 	}
@@ -105,12 +127,12 @@ void ARunCharacter::OnHitReceived(float const Damage)
 
 void ARunCharacter::PushBackOnDamage()
 {
-	GetCapsuleComponent()->SetCollisionProfileName(TEXT("Pawn"));
-	
 	if (DamageTimeHandler.IsValid())
 	{
 		GetWorldTimerManager().ClearTimer(DamageTimeHandler);
 	}
+
+	GetCapsuleComponent()->SetCollisionProfileName(TEXT("Pawn"));
 }
 
 void ARunCharacter::Death()
@@ -137,6 +159,7 @@ void ARunCharacter::Death()
 				UGameplayStatics::PlaySoundAtLocation(World, DeathSound, PlayerLocation);
 			}
 
+			SetActorEnableCollision(false);
 			GetMesh()->SetVisibility(false);
 
 			World->GetTimerManager().SetTimer(RestartTimeHandler, this, &ARunCharacter::OnDeath, 2.0f);
@@ -175,10 +198,36 @@ void ARunCharacter::SetupCamera()
 	CameraComponent->SetupAttachment(CameraArmComponent, USpringArmComponent::SocketName);
 }
 
+void ARunCharacter::CameraFollowPlayer(float const DeltaTime)
+{
+	FRotator ControlRotator = GetControlRotation();
+	ControlRotator.Roll = 0.0f;
+	ControlRotator.Pitch = 0.0f;
+	AddMovementInput(ControlRotator.Vector());
+
+	if (bCameraCanFollow)
+	{
+		FVector const CameraArmLocation = CameraArmComponent->GetComponentLocation();
+		FVector const CameraFollowPlayer = FVector(GetActorLocation().X - 100, CameraArmLocation.Y,
+		                                           CameraArmLocation.Z);
+		CameraArmComponent->SetWorldLocation(CameraFollowPlayer);
+	}
+	else if (!bCameraCanFollow)
+	{
+		SetNotFollowingMaxSeconds(GetNotFollowingMaxSeconds() - DeltaTime);
+
+		if (NotFollowingMaxSeconds <= 0)
+		{
+			AnimCamera();
+		}
+	}
+}
+
+
 void ARunCharacter::AnimCameraUpdate(float const InterpolationValue)
 {
 	FVector CameraArmLocation = CameraArmComponent->GetComponentLocation();
-	CameraArmLocation.X = FMath::Lerp(CameraArmLocation.X, GetActorLocation().X, InterpolationValue);
+	CameraArmLocation.X = FMath::Lerp(CameraArmLocation.X, GetActorLocation().X - 100, InterpolationValue);
 
 	CameraArmComponent->SetWorldLocation(CameraArmLocation);
 
@@ -214,21 +263,6 @@ void ARunCharacter::DamageCameraFinished() const
 #pragma endregion Camera
 
 #pragma region Movement
-void ARunCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
-{
-	Super::SetupPlayerInputComponent(PlayerInputComponent);
-
-	PlayerInputComponent->BindAction("Heal", IE_Pressed, this, &ARunCharacter::HealPlayer);
-	PlayerInputComponent->BindAction("Jump", IE_Pressed, this, &ARunCharacter::Jump);
-	PlayerInputComponent->BindAction("Jump", IE_Released, this, &ARunCharacter::StopJumping);
-	PlayerInputComponent->BindAction("MoveToRight", IE_Pressed, this, &ARunCharacter::MoveRight);
-	PlayerInputComponent->BindAction("MoveToLeft", IE_Pressed, this, &ARunCharacter::MoveLeft);
-	PlayerInputComponent->BindAction("MoveUp", IE_Pressed, this, &ARunCharacter::MoveFaster);
-	PlayerInputComponent->BindAction("MoveUp", IE_Released, this, &ARunCharacter::MoveNormal);
-	PlayerInputComponent->BindAction("Shoot", IE_Pressed, this, &ARunCharacter::Shoot);
-	PlayerInputComponent->BindAction("Attack", IE_Pressed, this, &ARunCharacter::Attack);
-}
-
 void ARunCharacter::ChangeLaneUpdate(float const InterpolationValue)
 {
 	FVector PlayerLocation = GetCapsuleComponent()->GetComponentLocation();
@@ -256,6 +290,20 @@ void ARunCharacter::MoveLeft()
 	ChangeLane();
 }
 
+void ARunCharacter::IncrementSpeeds()
+{
+	if (WalkSpeed < MaxSpeed)
+	{
+		WalkSpeed *= 1.01f;
+		SprintSpeed *= 1.01f;
+
+		if (!bIsPressingForwardAxis)
+		{
+			GetCharacterMovement()->MaxWalkSpeed = WalkSpeed;
+		}
+	}
+}
+
 void ARunCharacter::MoveNormal()
 {
 	if (!bCameraCanFollow)
@@ -270,6 +318,11 @@ void ARunCharacter::MoveNormal()
 
 void ARunCharacter::MoveFaster()
 {
+	if (PlayerStamina <= 0.006)
+	{
+		return;
+	}
+
 	FRotator ControlRotator = GetControlRotation();
 	ControlRotator.Roll = 0.0f;
 	ControlRotator.Pitch = 0.0f;
@@ -308,14 +361,16 @@ void ARunCharacter::Shoot()
 
 #pragma region PlayerHealth
 void ARunCharacter::HealPlayer()
-{	
+{
+	// UpgradeMaxHealth();
+
 	if (HealthPotions == 0) return;
-	
+
 	if (PlayerHealth < MaxHealth)
 	{
 		IncrementPlayerHealth(AmountToHeal);
 		IncrementHealthPotions(-1);
-	
+
 		if (HealingSound)
 		{
 			UGameplayStatics::PlaySoundAtLocation(GetWorld(), HealingSound, GetActorLocation());
@@ -331,13 +386,14 @@ void ARunCharacter::HealPlayer()
 
 void ARunCharacter::UpgradeMaxHealth()
 {
-	if(MaxHealth >= 2.4f)
+	if (MaxHealth >= 2.0f)
 	{
 		return;
 	}
-		MaxHealth += 0.3;
+	MaxHealth += 0.3;
+	SetPlayerHealth(MaxHealth);
 
-		OnHealthBarMaxHealth.Broadcast();
+	OnHealthBarMaxHealth.Broadcast();
 }
 
 void ARunCharacter::IncrementPlayerHealth(float const Health)
@@ -403,3 +459,94 @@ void ARunCharacter::SetHealthPotions(int const Potions)
 	HealthPotions = Potions;
 }
 #pragma endregion HealthPotions
+
+#pragma region Pontos
+int32 ARunCharacter::GetPontos() const
+{
+	return Pontos;
+}
+
+void ARunCharacter::IncrementPontos(int32 const Value)
+{
+	Pontos += Value;
+}
+
+void ARunCharacter::SetPontos(int32 const Value)
+{
+	Pontos = Value;
+}
+#pragma endregion Pontos
+
+#pragma region Stamina
+void ARunCharacter::IncrementPlayerStamina(float const Stamina)
+{
+	PlayerStamina += Stamina;
+
+	OnStaminaUse.Broadcast(GetPlayerRelativeStamina());
+
+	if (PlayerStamina >= MaxStamina)
+	{
+		PlayerStamina = MaxStamina;
+	}
+}
+
+void ARunCharacter::CheckPlayerStamina()
+{
+	if (bIsPressingForwardAxis)
+	{
+		bCanRegenStamina = false;
+
+		IncrementPlayerStamina(-PlayerStaminaConsume);
+
+		if (PlayerStamina <= 0.002)
+		{
+			GetWorldTimerManager().SetTimer(StaminaRegenTimeHandler, this, &ARunCharacter::StartStaminaRegen, 5.f,
+			                                false);
+			MoveNormal();
+		}
+	}
+	else if (!bIsPressingForwardAxis)
+	{
+		if (!GetWorldTimerManager().TimerExists(StaminaRegenTimeHandler))
+		{
+			GetWorldTimerManager().SetTimer(StaminaRegenTimeHandler, this, &ARunCharacter::StartStaminaRegen, 1.2f,
+			                                false);
+		}
+
+		if (bCanRegenStamina)
+		{
+			IncrementPlayerStamina(PlayerStaminaRegen);
+		}
+	}
+}
+
+float ARunCharacter::GetPlayerRelativeStamina() const
+{
+	return PlayerStamina / MaxStamina;
+}
+
+float ARunCharacter::GetPlayerMaxStamina() const
+{
+	return MaxStamina;
+}
+
+float ARunCharacter::GetPlayerStamina() const
+{
+	return PlayerStamina;
+}
+
+void ARunCharacter::SetPlayerStamina(float const Stamina)
+{
+	PlayerStamina = Stamina;
+}
+
+void ARunCharacter::StartStaminaRegen()
+{
+	if (StaminaRegenTimeHandler.IsValid())
+	{
+		GetWorldTimerManager().ClearTimer(StaminaRegenTimeHandler);
+	}
+
+	bCanRegenStamina = true;
+}
+#pragma endregion Stamina
