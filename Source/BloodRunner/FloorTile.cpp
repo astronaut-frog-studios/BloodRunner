@@ -59,13 +59,16 @@ void AFloorTile::OnTriggerBoxOverlap(UPrimitiveComponent* OverlappedComponent, A
 	{
 		RunnerGameMode->AddFloorTile();
 
+		RunCharacter->IncrementSpeeds();
+
 		GetWorldTimerManager().SetTimer(DestroyTimerHandle, this, &AFloorTile::DestroyFloorTile, 4.0f, false);
 	}
 }
 
 void AFloorTile::SpawnItems()
 {
-	if (IsValid(CoffinObstacleClass) && IsValid(CartObstacleClass) && IsValid(PostObstacleClass) && IsValid(HealthPotionItemClass))
+	if (IsValid(CoffinObstacleClass) && IsValid(CartObstacleClass) && IsValid(PostObstacleClass) && IsValid(
+		HealthPotionItemClass))
 	{
 		SpawnLaneItem(CenterLaneArrow);
 		SpawnLaneItem(LeftLaneArrow);
@@ -83,11 +86,39 @@ void AFloorTile::SpawnLaneItem(UArrowComponent* Lane)
 	SpawnParameters.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 
 	if (UKismetMathLibrary::InRange_FloatFloat(RandomPercentage, SoulSpawnPercent[0], SoulSpawnPercent[1], true,
-	                                           false) || ObsCount >= 2) //Alma
+	                                            true)) //Alma
 	{
-		// TODO: spawnar a alma pra coletar, os pontos
+		for (int32 i = 0; i < 3; i++)
+		{
+			const FVector& SpawnLocation = SpawnTransform.GetLocation();
+
+			FTransform NewSpawnTransform;
+			FVector NewSpawnLocation;
+			float LocationX = 0;
+
+			if (i == 0)
+			{
+				LocationX = SpawnLocation.X;
+			}
+			else if (i == 1)
+			{
+				LocationX = SpawnLocation.X + SoulItemSpawnOffset;
+			}
+			else if (i == 2)
+			{
+				LocationX = SpawnLocation.X - SoulItemSpawnOffset;
+			}
+
+			NewSpawnLocation = FVector(LocationX, SpawnLocation.Y, SpawnLocation.Z);
+			NewSpawnTransform = FTransform(NewSpawnLocation);
+
+			APointItem* PointToSpawn = GetWorld()->SpawnActor<APointItem>(
+				SoulPointClass, NewSpawnTransform,
+				SpawnParameters);
+		}
 	}
-	else if (UKismetMathLibrary::InRange_FloatFloat(RandomPercentage, ObstacleSpawnPercent[0], ObstacleSpawnPercent[1], true, false) && ObsCount < 2) //Obs
+	else if (UKismetMathLibrary::InRange_FloatFloat(RandomPercentage, ObstacleSpawnPercent[0], ObstacleSpawnPercent[1],
+	                                                true, false) && ObsCount < 2) //Obs
 	{
 		ObsCount++;
 
@@ -95,23 +126,27 @@ void AFloorTile::SpawnLaneItem(UArrowComponent* Lane)
 
 		AObstacle* ObstacleToSpawn;
 
-		if (UKismetMathLibrary::InRange_FloatFloat(ObstacleRandomPercentage, FirstObsSpawnPercent[0], FirstObsSpawnPercent[1], true, true)) // Caixao
+		if (UKismetMathLibrary::InRange_FloatFloat(ObstacleRandomPercentage, FirstObsSpawnPercent[0],
+		                                           FirstObsSpawnPercent[1], true, true)) // Caixao
 		{
 			ObstacleToSpawn = GetWorld()->SpawnActor<AObstacle>(CoffinObstacleClass, SpawnTransform,
 			                                                    SpawnParameters);
 		}
-		else if (UKismetMathLibrary::InRange_FloatFloat(ObstacleRandomPercentage, SecondObsSpawnPercent[0], SecondObsSpawnPercent[1], true, true)) // Obs2
+		else if (UKismetMathLibrary::InRange_FloatFloat(ObstacleRandomPercentage, SecondObsSpawnPercent[0],
+		                                                SecondObsSpawnPercent[1], true, true)) // Obs2
 		{
 			ObstacleToSpawn = GetWorld()->SpawnActor<AObstacle>(CartObstacleClass, SpawnTransform,
 			                                                    SpawnParameters);
 		}
-		else if (UKismetMathLibrary::InRange_FloatFloat(ObstacleRandomPercentage, ThirdObsSpawnPercent[0], ThirdObsSpawnPercent[1], true, true)) // Obs3
+		else if (UKismetMathLibrary::InRange_FloatFloat(ObstacleRandomPercentage, ThirdObsSpawnPercent[0],
+		                                                ThirdObsSpawnPercent[1], true, true)) // Obs3
 		{
 			ObstacleToSpawn = GetWorld()->SpawnActor<AObstacle>(PostObstacleClass, SpawnTransform,
 			                                                    SpawnParameters);
 		}
 	}
-	else if (UKismetMathLibrary::InRange_FloatFloat(RandomPercentage, PotionSpawnPercent[0], PotionSpawnPercent[1], true, true)) // Pot
+	else if (UKismetMathLibrary::InRange_FloatFloat(RandomPercentage, PotionSpawnPercent[0], PotionSpawnPercent[1],
+	                                                true, true)) // Pot
 	{
 		AHealthPotionItem* PotionToSpawn = GetWorld()->SpawnActor<AHealthPotionItem>(
 			HealthPotionItemClass, SpawnTransform,
