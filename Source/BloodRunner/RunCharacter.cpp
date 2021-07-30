@@ -19,7 +19,7 @@ ARunCharacter::ARunCharacter()
 	bIsDead = false;
 	bCanRegenStamina = false;
 	NotFollowingInitialSeconds = 2.f;
-	InitialCameraOffset = FVector(-520.0, 0.f, 700);
+	InitialCameraOffset = FVector(-550.0, 0.f, 730);
 	NotFollowingMaxSeconds = NotFollowingInitialSeconds;
 
 	MaxHealth = 1.f;
@@ -34,9 +34,11 @@ ARunCharacter::ARunCharacter()
 	PlayerStaminaRegen = 0.002f;
 	NextLane = 0;
 	MaxSpeed = 3200;
+	InitialSpeed = 800;
 	SprintSpeed = 1500;
-	WalkSpeed = 800;
+	WalkSpeed = InitialSpeed;
 	MoveBackSpeed = 200;
+	CameraSpeedX = 120;
 
 	SetupCamera();
 }
@@ -185,14 +187,14 @@ void ARunCharacter::OnDeath()
 void ARunCharacter::SetupCamera()
 {
 	CameraArmComponent = CreateDefaultSubobject<USpringArmComponent>(TEXT("CameraArm"));
-	CameraArmComponent->TargetArmLength = 460.f;
+	CameraArmComponent->TargetArmLength = 500.f;
 	CameraArmComponent->TargetOffset = InitialCameraOffset;
 	CameraArmComponent->bUsePawnControlRotation = true;
 	CameraArmComponent->SetupAttachment(GetRootComponent());
 
 	CameraComponent = CreateDefaultSubobject<UCameraComponent>(TEXT("Camera"));
 	CameraComponent->bUsePawnControlRotation = false;
-	CameraComponent->SetFieldOfView(50.f);
+	CameraComponent->SetFieldOfView(55.f);
 	FRotator const CameraRotator = CameraComponent->GetComponentRotation();
 	CameraComponent->SetWorldRotation(FRotator(-20.f, CameraRotator.Yaw, CameraRotator.Roll));
 	CameraComponent->SetupAttachment(CameraArmComponent, USpringArmComponent::SocketName);
@@ -208,9 +210,10 @@ void ARunCharacter::CameraFollowPlayer(float const DeltaTime)
 	if (bCameraCanFollow)
 	{
 		FVector const CameraArmLocation = CameraArmComponent->GetComponentLocation();
-		FVector const CameraFollowPlayer = FVector(GetActorLocation().X - 100, CameraArmLocation.Y,
+		FVector const CameraFollowPlayer = FVector( GetActorLocation().X - CameraSpeedX, CameraArmLocation.Y,
 		                                           CameraArmLocation.Z);
-		CameraArmComponent->SetWorldLocation(CameraFollowPlayer);
+
+		CameraArmComponent->SetRelativeLocation(CameraFollowPlayer);
 	}
 	else if (!bCameraCanFollow)
 	{
@@ -219,7 +222,7 @@ void ARunCharacter::CameraFollowPlayer(float const DeltaTime)
 		if (NotFollowingMaxSeconds <= 0)
 		{
 			AnimCamera();
-		}
+		} 
 	}
 }
 
@@ -296,6 +299,7 @@ void ARunCharacter::IncrementSpeeds()
 	{
 		WalkSpeed *= 1.01f;
 		SprintSpeed *= 1.01f;
+		CameraSpeedX *= 1.01f;
 
 		if (!bIsPressingForwardAxis)
 		{
