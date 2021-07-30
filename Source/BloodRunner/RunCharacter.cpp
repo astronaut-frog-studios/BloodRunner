@@ -73,8 +73,6 @@ void ARunCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompon
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
 
 	PlayerInputComponent->BindAction("Heal", IE_Pressed, this, &ARunCharacter::HealPlayer);
-	PlayerInputComponent->BindAction("Jump", IE_Pressed, this, &ARunCharacter::Jump);
-	PlayerInputComponent->BindAction("Jump", IE_Released, this, &ARunCharacter::StopJumping);
 	PlayerInputComponent->BindAction("MoveToRight", IE_Pressed, this, &ARunCharacter::MoveRight);
 	PlayerInputComponent->BindAction("MoveToLeft", IE_Pressed, this, &ARunCharacter::MoveLeft);
 	PlayerInputComponent->BindAction("MoveUp", IE_Pressed, this, &ARunCharacter::MoveFaster);
