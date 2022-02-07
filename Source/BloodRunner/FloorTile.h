@@ -63,6 +63,8 @@ protected:
 	UStaticMeshComponent* FloorMesh;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Components")
 	UBoxComponent* FloorTriggerBox;
+	UPROPERTY(VisibleAnywhere,BlueprintReadOnly, Category="Components")
+	TArray<AActor*> ChildActors;
 
 	UPROPERTY(EditAnywhere, Category="Config")
 	float SoulSpawnPercent[2] = {0.32f, 0.59f};

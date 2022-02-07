@@ -86,7 +86,7 @@ void AFloorTile::SpawnLaneItem(UArrowComponent* Lane)
 	SpawnParameters.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 
 	if (UKismetMathLibrary::InRange_FloatFloat(RandomPercentage, SoulSpawnPercent[0], SoulSpawnPercent[1], true,
-	                                            true)) //Alma
+	                                           true)) //Alma
 	{
 		for (int32 i = 0; i < 3; i++)
 		{
@@ -115,6 +115,8 @@ void AFloorTile::SpawnLaneItem(UArrowComponent* Lane)
 			APointItem* PointToSpawn = GetWorld()->SpawnActor<APointItem>(
 				SoulPointClass, NewSpawnTransform,
 				SpawnParameters);
+
+			ChildActors.Add(PointToSpawn);
 		}
 	}
 	else if (UKismetMathLibrary::InRange_FloatFloat(RandomPercentage, ObstacleSpawnPercent[0], ObstacleSpawnPercent[1],
@@ -131,18 +133,21 @@ void AFloorTile::SpawnLaneItem(UArrowComponent* Lane)
 		{
 			ObstacleToSpawn = GetWorld()->SpawnActor<AObstacle>(CoffinObstacleClass, SpawnTransform,
 			                                                    SpawnParameters);
+			ChildActors.Add(ObstacleToSpawn);
 		}
 		else if (UKismetMathLibrary::InRange_FloatFloat(ObstacleRandomPercentage, SecondObsSpawnPercent[0],
 		                                                SecondObsSpawnPercent[1], true, true)) // Obs2
 		{
 			ObstacleToSpawn = GetWorld()->SpawnActor<AObstacle>(CartObstacleClass, SpawnTransform,
 			                                                    SpawnParameters);
+			ChildActors.Add(ObstacleToSpawn);
 		}
 		else if (UKismetMathLibrary::InRange_FloatFloat(ObstacleRandomPercentage, ThirdObsSpawnPercent[0],
 		                                                ThirdObsSpawnPercent[1], true, true)) // Obs3
 		{
 			ObstacleToSpawn = GetWorld()->SpawnActor<AObstacle>(PostObstacleClass, SpawnTransform,
 			                                                    SpawnParameters);
+			ChildActors.Add(ObstacleToSpawn);
 		}
 	}
 	else if (UKismetMathLibrary::InRange_FloatFloat(RandomPercentage, PotionSpawnPercent[0], PotionSpawnPercent[1],
@@ -151,6 +156,8 @@ void AFloorTile::SpawnLaneItem(UArrowComponent* Lane)
 		AHealthPotionItem* PotionToSpawn = GetWorld()->SpawnActor<AHealthPotionItem>(
 			HealthPotionItemClass, SpawnTransform,
 			SpawnParameters);
+
+		ChildActors.Add(PotionToSpawn);
 	}
 }
 
@@ -159,6 +166,14 @@ void AFloorTile::DestroyFloorTile()
 	if (DestroyTimerHandle.IsValid())
 	{
 		GetWorldTimerManager().ClearTimer(DestroyTimerHandle);
+	}
+
+	for (auto const Child : ChildActors)
+	{
+		if (IsValid(Child))
+		{
+			Child->Destroy();
+		}
 	}
 
 	Destroy();

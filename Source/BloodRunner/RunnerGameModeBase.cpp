@@ -71,7 +71,6 @@ bool ARunnerGameModeBase::BIsFloorTileCountDividedByTen() const
 {
 	if (FloorTilesCount % 10 == 0)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("É MULTIPLOOOOO"));
 		return true;
 	}
 
