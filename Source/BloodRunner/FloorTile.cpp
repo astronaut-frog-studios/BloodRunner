@@ -167,7 +167,9 @@ void AFloorTile::SpawnObstacles(bool const bCanSpawn, FTransform const SpawnTran
 
 void AFloorTile::SpawnPotions(bool const bCanSpawn, FTransform const SpawnTransform)
 {
-	if (!bCanSpawn) return;
+	const ARunCharacter* RunCharacter = Cast<ARunCharacter>(GetWorld()->GetFirstPlayerController()->GetCharacter());
+
+	if (!bCanSpawn || RunCharacter->GetHealthPotions() >= RunCharacter->GetMaxHealthPotions()) return;
 
 	AHealthPotionItem* PotionToSpawn = GetWorld()->SpawnActor<AHealthPotionItem>(
 		HealthPotionItemClass, SpawnTransform,

@@ -31,7 +31,7 @@ private:
 	bool bCanInitHud;
 	UFUNCTION()
 	void InitGameHud();
-	
+
 	UPROPERTY(VisibleInstanceOnly, Category="Movement")
 	bool bIsPressingForwardAxis;
 
@@ -201,6 +201,8 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category="Potions")
 	float GetHealthPotions() const;
+	UFUNCTION(BlueprintCallable, Category="Potions")
+	int32 GetMaxHealthPotions() const;
 	UFUNCTION(BlueprintCallable, Category="Potions")
 	void IncrementHealthPotions(int HealthPotion = 1);
 	UFUNCTION(BlueprintCallable, Category="Potions")

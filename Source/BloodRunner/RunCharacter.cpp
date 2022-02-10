@@ -443,6 +443,11 @@ float ARunCharacter::GetHealthPotions() const
 	return HealthPotions;
 }
 
+int32 ARunCharacter::GetMaxHealthPotions() const
+{
+	return MaxHealthPotions;
+}
+
 void ARunCharacter::IncrementHealthPotions(int const HealthPotion)
 {
 	if (HealthPotions >= MaxHealthPotions)
