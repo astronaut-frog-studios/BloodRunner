@@ -63,7 +63,7 @@ protected:
 	UStaticMeshComponent* FloorMesh;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Components")
 	UBoxComponent* FloorTriggerBox;
-	UPROPERTY(VisibleAnywhere,BlueprintReadOnly, Category="Components")
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Components")
 	TArray<AActor*> ChildActors;
 
 	UPROPERTY(EditAnywhere, Category="Config")
@@ -72,7 +72,7 @@ protected:
 	float ObstacleSpawnPercent[2] = {0.6f, 0.9f};
 	UPROPERTY(EditAnywhere, Category="Config")
 	float PotionSpawnPercent[2] = {0.98f, 1.f};
-	
+
 	UPROPERTY(EditAnywhere, Category="Config")
 	float FirstObsSpawnPercent[2] = {0.f, 0.45f};
 	UPROPERTY(EditAnywhere, Category="Config")
@@ -85,6 +85,12 @@ protected:
 
 	UFUNCTION()
 	void SpawnLaneItem(UArrowComponent* Lane);
+
+	FActorSpawnParameters SpawnParameters;
+	void SpawnSoulPoints(bool const bCanSpawn, FTransform const SpawnTransform);
+	void SpawnObstacles(bool const bCanSpawn, FTransform const SpawnTransform);
+	void SpawnPotions(bool const bCanSpawn, FTransform const SpawnTransform);
+
 
 public:
 	UFUNCTION()

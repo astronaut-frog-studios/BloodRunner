@@ -13,6 +13,7 @@
 AFloorTile::AFloorTile()
 {
 	ObsCount = 0;
+	SpawnParameters.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 
 	SceneComponent = CreateDefaultSubobject<USceneComponent>(TEXT("Scene"));
 	RootComponent = SceneComponent;
@@ -82,84 +83,99 @@ void AFloorTile::SpawnLaneItem(UArrowComponent* Lane)
 
 	const FTransform& SpawnTransform = Lane->GetComponentTransform();
 
-	FActorSpawnParameters SpawnParameters;
-	SpawnParameters.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+	SpawnSoulPoints(UKismetMathLibrary::InRange_FloatFloat(RandomPercentage, SoulSpawnPercent[0], SoulSpawnPercent[1],
+	                                                       true,
+	                                                       true), SpawnTransform);
 
-	if (UKismetMathLibrary::InRange_FloatFloat(RandomPercentage, SoulSpawnPercent[0], SoulSpawnPercent[1], true,
-	                                           true)) //Alma
+	SpawnObstacles((UKismetMathLibrary::InRange_FloatFloat(RandomPercentage, ObstacleSpawnPercent[0],
+	                                                       ObstacleSpawnPercent[1],
+	                                                       true, false) && ObsCount < 2), SpawnTransform);
+
+	SpawnPotions(UKismetMathLibrary::InRange_FloatFloat(RandomPercentage, PotionSpawnPercent[0], PotionSpawnPercent[1],
+	                                                    true, true), SpawnTransform);
+}
+
+#pragma region ItemsToSpawn
+void AFloorTile::SpawnSoulPoints(bool const bCanSpawn, FTransform const SpawnTransform)
+{
+	if (!bCanSpawn) return;
+
+	for (int32 i = 0; i < 3; i++)
 	{
-		for (int32 i = 0; i < 3; i++)
+		const FVector& SpawnLocation = SpawnTransform.GetLocation();
+
+		FTransform NewSpawnTransform;
+		FVector NewSpawnLocation;
+		float LocationX = 0;
+
+		if (i == 0)
 		{
-			const FVector& SpawnLocation = SpawnTransform.GetLocation();
-
-			FTransform NewSpawnTransform;
-			FVector NewSpawnLocation;
-			float LocationX = 0;
-
-			if (i == 0)
-			{
-				LocationX = SpawnLocation.X;
-			}
-			else if (i == 1)
-			{
-				LocationX = SpawnLocation.X + SoulItemSpawnOffset;
-			}
-			else if (i == 2)
-			{
-				LocationX = SpawnLocation.X - SoulItemSpawnOffset;
-			}
-
-			NewSpawnLocation = FVector(LocationX, SpawnLocation.Y, SpawnLocation.Z);
-			NewSpawnTransform = FTransform(NewSpawnLocation);
-
-			APointItem* PointToSpawn = GetWorld()->SpawnActor<APointItem>(
-				SoulPointClass, NewSpawnTransform,
-				SpawnParameters);
-
-			ChildActors.Add(PointToSpawn);
+			LocationX = SpawnLocation.X;
 		}
-	}
-	else if (UKismetMathLibrary::InRange_FloatFloat(RandomPercentage, ObstacleSpawnPercent[0], ObstacleSpawnPercent[1],
-	                                                true, false) && ObsCount < 2) //Obs
-	{
-		ObsCount++;
-
-		const float ObstacleRandomPercentage = FMath::RandRange(0.f, 1.f);
-
-		AObstacle* ObstacleToSpawn;
-
-		if (UKismetMathLibrary::InRange_FloatFloat(ObstacleRandomPercentage, FirstObsSpawnPercent[0],
-		                                           FirstObsSpawnPercent[1], true, true)) // Caixao
+		else if (i == 1)
 		{
-			ObstacleToSpawn = GetWorld()->SpawnActor<AObstacle>(CoffinObstacleClass, SpawnTransform,
-			                                                    SpawnParameters);
-			ChildActors.Add(ObstacleToSpawn);
+			LocationX = SpawnLocation.X + SoulItemSpawnOffset;
 		}
-		else if (UKismetMathLibrary::InRange_FloatFloat(ObstacleRandomPercentage, SecondObsSpawnPercent[0],
-		                                                SecondObsSpawnPercent[1], true, true)) // Obs2
+		else if (i == 2)
 		{
-			ObstacleToSpawn = GetWorld()->SpawnActor<AObstacle>(CartObstacleClass, SpawnTransform,
-			                                                    SpawnParameters);
-			ChildActors.Add(ObstacleToSpawn);
+			LocationX = SpawnLocation.X - SoulItemSpawnOffset;
 		}
-		else if (UKismetMathLibrary::InRange_FloatFloat(ObstacleRandomPercentage, ThirdObsSpawnPercent[0],
-		                                                ThirdObsSpawnPercent[1], true, true)) // Obs3
-		{
-			ObstacleToSpawn = GetWorld()->SpawnActor<AObstacle>(PostObstacleClass, SpawnTransform,
-			                                                    SpawnParameters);
-			ChildActors.Add(ObstacleToSpawn);
-		}
-	}
-	else if (UKismetMathLibrary::InRange_FloatFloat(RandomPercentage, PotionSpawnPercent[0], PotionSpawnPercent[1],
-	                                                true, true)) // Pot
-	{
-		AHealthPotionItem* PotionToSpawn = GetWorld()->SpawnActor<AHealthPotionItem>(
-			HealthPotionItemClass, SpawnTransform,
+
+		NewSpawnLocation = FVector(LocationX, SpawnLocation.Y, SpawnLocation.Z);
+		NewSpawnTransform = FTransform(NewSpawnLocation);
+
+		APointItem* PointToSpawn = GetWorld()->SpawnActor<APointItem>(
+			SoulPointClass, NewSpawnTransform,
 			SpawnParameters);
 
-		ChildActors.Add(PotionToSpawn);
+		ChildActors.Add(PointToSpawn);
 	}
 }
+
+void AFloorTile::SpawnObstacles(bool const bCanSpawn, FTransform const SpawnTransform)
+{
+	if (!bCanSpawn) return;
+
+	ObsCount++;
+
+	const float ObstacleRandomPercentage = FMath::RandRange(0.f, 1.f);
+
+	AObstacle* ObstacleToSpawn;
+
+	if (UKismetMathLibrary::InRange_FloatFloat(ObstacleRandomPercentage, FirstObsSpawnPercent[0],
+	                                           FirstObsSpawnPercent[1], true, true)) // Caixao
+	{
+		ObstacleToSpawn = GetWorld()->SpawnActor<AObstacle>(CoffinObstacleClass, SpawnTransform,
+		                                                    SpawnParameters);
+		ChildActors.Add(ObstacleToSpawn);
+	}
+	else if (UKismetMathLibrary::InRange_FloatFloat(ObstacleRandomPercentage, SecondObsSpawnPercent[0],
+	                                                SecondObsSpawnPercent[1], true, true)) // Obs2
+	{
+		ObstacleToSpawn = GetWorld()->SpawnActor<AObstacle>(CartObstacleClass, SpawnTransform,
+		                                                    SpawnParameters);
+		ChildActors.Add(ObstacleToSpawn);
+	}
+	else if (UKismetMathLibrary::InRange_FloatFloat(ObstacleRandomPercentage, ThirdObsSpawnPercent[0],
+	                                                ThirdObsSpawnPercent[1], true, true)) // Obs3
+	{
+		ObstacleToSpawn = GetWorld()->SpawnActor<AObstacle>(PostObstacleClass, SpawnTransform,
+		                                                    SpawnParameters);
+		ChildActors.Add(ObstacleToSpawn);
+	}
+}
+
+void AFloorTile::SpawnPotions(bool const bCanSpawn, FTransform const SpawnTransform)
+{
+	if (!bCanSpawn) return;
+
+	AHealthPotionItem* PotionToSpawn = GetWorld()->SpawnActor<AHealthPotionItem>(
+		HealthPotionItemClass, SpawnTransform,
+		SpawnParameters);
+
+	ChildActors.Add(PotionToSpawn);
+}
+#pragma endregion ItemsToSpawn
 
 void AFloorTile::DestroyFloorTile()
 {
