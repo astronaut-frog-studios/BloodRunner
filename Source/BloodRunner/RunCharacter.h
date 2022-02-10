@@ -210,15 +210,6 @@ public:
 	UFUNCTION(BlueprintCallable, Category="Potions")
 	void HealPlayer();
 
-	UFUNCTION(BlueprintCallable)
-	int32 GetPontos() const;
-	UFUNCTION(BlueprintCallable)
-	void IncrementPontos(int32 const Value = 3);
-	UFUNCTION(BlueprintCallable)
-	void SetPontos(int32 const Value = 3);
-	UPROPERTY(BlueprintReadWrite)
-	int32 Pontos;
-
 	UFUNCTION(BlueprintCallable, Category="Stamina")
 	float GetPlayerStamina() const;
 	UFUNCTION(BlueprintCallable, Category="Stamina")

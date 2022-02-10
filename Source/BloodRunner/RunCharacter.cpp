@@ -13,8 +13,6 @@ ARunCharacter::ARunCharacter()
 {
 	PrimaryActorTick.bCanEverTick = true;
 
-	Pontos = 0;
-
 	bCameraCanFollow = true;
 	bIsDead = false;
 	bCanRegenStamina = false;
@@ -466,23 +464,6 @@ void ARunCharacter::SetHealthPotions(int const Potions)
 	HealthPotions = Potions;
 }
 #pragma endregion HealthPotions
-
-#pragma region Pontos
-int32 ARunCharacter::GetPontos() const
-{
-	return Pontos;
-}
-
-void ARunCharacter::IncrementPontos(int32 const Value)
-{
-	Pontos += Value;
-}
-
-void ARunCharacter::SetPontos(int32 const Value)
-{
-	Pontos = Value;
-}
-#pragma endregion Pontos
 
 #pragma region Stamina
 void ARunCharacter::IncrementPlayerStamina(float const Stamina)

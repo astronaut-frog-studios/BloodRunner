@@ -11,7 +11,7 @@
 void ARunnerGameModeBase::BeginPlay()
 {
 	Super::BeginPlay();
-	
+
 	// UGameplayStatics::GetPlayerController(GetWorld(), 0)->bShowMouseCursor = true;
 
 	GameHud = Cast<UGameHud>(CreateWidget(GetWorld(), GameHudClass));
@@ -21,6 +21,7 @@ void ARunnerGameModeBase::BeginPlay()
 	CreateInitialFloorTiles();
 }
 
+#pragma region FloorTiles
 void ARunnerGameModeBase::CreateInitialFloorTiles()
 {
 	for (int i = 0; i < InitialFloorTilesCount; ++i)
@@ -76,3 +77,21 @@ bool ARunnerGameModeBase::BIsFloorTileCountDividedByTen() const
 
 	return false;
 }
+#pragma endregion FloorTiles
+
+#pragma region Souls
+int32 ARunnerGameModeBase::GetSoulPoints() const
+{
+	return SoulPoints;
+}
+
+void ARunnerGameModeBase::IncrementSoulPoints(int32 const Value)
+{
+	SoulPoints += Value;
+}
+
+void ARunnerGameModeBase::SetSoulPoints(int32 const Value)
+{
+	SoulPoints = Value;
+}
+#pragma endregion Souls
