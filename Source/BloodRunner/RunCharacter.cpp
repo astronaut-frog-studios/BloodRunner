@@ -288,16 +288,12 @@ void ARunCharacter::MoveRight()
 {
 	NextLane = FMath::Clamp(CurrentLane + 1, 0, 2);
 	ChangeLane();
-	UpgradeMaxStamina();
-	UpgradeMaxHealth();
 }
 
 void ARunCharacter::MoveLeft()
 {
 	NextLane = FMath::Clamp(CurrentLane - 1, 0, 2);
 	ChangeLane();
-	UpgradeMaxStamina();
-	UpgradeMaxHealth();
 }
 
 void ARunCharacter::IncrementSpeeds()
