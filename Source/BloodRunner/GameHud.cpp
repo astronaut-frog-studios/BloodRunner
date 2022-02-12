@@ -7,7 +7,7 @@
 
 void UGameHud::InitializeGameHudPlayer(ARunCharacter* RunCharacter)
 {
-	if(RunCharacter)
+	if (RunCharacter)
 	{
 		PotionsCount->SetText(FText::AsNumber(RunCharacter->GetHealthPotions()));
 		HealthBar->SetPercent(RunCharacter->GetPlayerHealth());
@@ -16,22 +16,23 @@ void UGameHud::InitializeGameHudPlayer(ARunCharacter* RunCharacter)
 		RunCharacter->OnHealthBarHeal.AddDynamic(this, &UGameHud::SetHealth);
 		RunCharacter->OnHealthBarMaxHealth.AddDynamic(this, &UGameHud::UpgradeMaxHealth);
 		RunCharacter->OnStaminaUse.AddDynamic(this, &UGameHud::SetStamina);
+		RunCharacter->OnStaminaBarMaxStamina.AddDynamic(this,&UGameHud::UpgradeMaxStamina);
 	}
 }
 
-void UGameHud::SetPotionsCount(int32 const Count) 
+void UGameHud::SetPotionsCount(int32 const Count)
 {
 	PotionsCount->SetText(FText::AsNumber(Count));
 }
 
-void UGameHud::SetHealth(float const Count) 
+void UGameHud::SetHealth(float const Count)
 {
 	HealthBar->SetPercent(Count);
 }
 
 void UGameHud::UpgradeMaxHealth()
 {
-	FVector2D const HealthBarTranslation =  HealthBar->RenderTransform.Translation;
+	FVector2D const HealthBarTranslation = HealthBar->RenderTransform.Translation;
 	FVector2D const HealthBarScale = HealthBar->RenderTransform.Scale;
 
 	HealthBar->SetRenderScale(FVector2D(HealthBarScale.X + 0.2f, HealthBarScale.Y));
@@ -43,3 +44,11 @@ void UGameHud::SetStamina(float const Value)
 	StaminaBar->SetPercent(Value);
 }
 
+void UGameHud::UpgradeMaxStamina()
+{
+	FVector2D const StaminaBarTranslation = StaminaBar->RenderTransform.Translation;
+	FVector2D const StaminaBarScale = StaminaBar->RenderTransform.Scale;
+
+	StaminaBar->SetRenderScale(FVector2D(StaminaBarScale.X + 0.15f, StaminaBarScale.Y));
+	StaminaBar->SetRenderTranslation(FVector2D(StaminaBarTranslation.X + 15.f, StaminaBarTranslation.Y));
+}

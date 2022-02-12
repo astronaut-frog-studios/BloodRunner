@@ -21,15 +21,22 @@ ARunCharacter::ARunCharacter()
 	NotFollowingMaxSeconds = NotFollowingInitialSeconds;
 
 	MaxHealth = 1.f;
+	MaxUpgradedHealth = 2.2f;
+	MaxHealthIncrementAmount = 0.3f;
 	PlayerHealth = MaxHealth;
+
 	HealthPotions = 0;
 	AmountToHeal = 0.2f;
-	MaxHealthPotions = 6;
-	CurrentLane = 1;
+	MaxHealthPotions = 5;
+
 	MaxStamina = 1.f;
 	PlayerStamina = MaxStamina;
+	MaxUpgradedStamina = 2.0f;
+	MaxStaminaIncrementAmount = 0.2f;
 	PlayerStaminaConsume = 0.005f;
 	PlayerStaminaRegen = 0.002f;
+
+	CurrentLane = 1;
 	NextLane = 0;
 	MaxSpeed = 3200;
 	InitialSpeed = 800;
@@ -206,7 +213,7 @@ void ARunCharacter::CameraFollowPlayer(float const DeltaTime)
 	if (bCameraCanFollow)
 	{
 		FVector const CameraArmLocation = CameraArmComponent->GetComponentLocation();
-		FVector const CameraFollowPlayer = FVector( GetActorLocation().X - CameraSpeedX, CameraArmLocation.Y,
+		FVector const CameraFollowPlayer = FVector(GetActorLocation().X - CameraSpeedX, CameraArmLocation.Y,
 		                                           CameraArmLocation.Z);
 
 		CameraArmComponent->SetRelativeLocation(CameraFollowPlayer);
@@ -218,7 +225,7 @@ void ARunCharacter::CameraFollowPlayer(float const DeltaTime)
 		if (NotFollowingMaxSeconds <= 0)
 		{
 			AnimCamera();
-		} 
+		}
 	}
 }
 
@@ -281,12 +288,16 @@ void ARunCharacter::MoveRight()
 {
 	NextLane = FMath::Clamp(CurrentLane + 1, 0, 2);
 	ChangeLane();
+	UpgradeMaxStamina();
+	UpgradeMaxHealth();
 }
 
 void ARunCharacter::MoveLeft()
 {
 	NextLane = FMath::Clamp(CurrentLane - 1, 0, 2);
 	ChangeLane();
+	UpgradeMaxStamina();
+	UpgradeMaxHealth();
 }
 
 void ARunCharacter::IncrementSpeeds()
@@ -362,36 +373,32 @@ void ARunCharacter::Shoot()
 #pragma region PlayerHealth
 void ARunCharacter::HealPlayer()
 {
-	// UpgradeMaxHealth();
+	if (HealthPotions == 0 || PlayerHealth >= MaxHealth) return;
 
-	if (HealthPotions == 0) return;
+	IncrementPlayerHealth(AmountToHeal);
+	IncrementHealthPotions(-1);
 
-	if (PlayerHealth < MaxHealth)
+	if (HealingSound)
 	{
-		IncrementPlayerHealth(AmountToHeal);
-		IncrementHealthPotions(-1);
-
-		if (HealingSound)
-		{
-			UGameplayStatics::PlaySoundAtLocation(GetWorld(), HealingSound, GetActorLocation());
-		}
+		UGameplayStatics::PlaySoundAtLocation(GetWorld(), HealingSound, GetActorLocation());
 	}
+
 	if (PlayerHealth >= MaxHealth)
 	{
 		SetPlayerHealth(MaxHealth);
 	}
-
-	OnHealthBarHeal.Broadcast(GetPlayerRelativeHealth());
 }
 
 void ARunCharacter::UpgradeMaxHealth()
 {
-	if (MaxHealth >= 2.0f)
+	MaxHealth += MaxHealthIncrementAmount;
+
+	if (MaxHealth >= MaxUpgradedHealth)
 	{
+		MaxHealth = MaxUpgradedHealth;
+		SetPlayerHealth(MaxHealth);
 		return;
 	}
-	MaxHealth += 0.3;
-	SetPlayerHealth(MaxHealth);
 
 	OnHealthBarMaxHealth.Broadcast();
 }
@@ -474,8 +481,22 @@ void ARunCharacter::IncrementPlayerStamina(float const Stamina)
 
 	if (PlayerStamina >= MaxStamina)
 	{
-		PlayerStamina = MaxStamina;
+		SetPlayerStamina(MaxStamina);
 	}
+}
+
+void ARunCharacter::UpgradeMaxStamina()
+{
+	MaxStamina += MaxStaminaIncrementAmount;
+
+	if (MaxStamina >= MaxUpgradedStamina)
+	{
+		MaxStamina = MaxUpgradedStamina;
+		SetPlayerStamina(MaxStamina);
+		return;
+	}
+
+	OnStaminaBarMaxStamina.Broadcast();
 }
 
 void ARunCharacter::CheckPlayerStamina()

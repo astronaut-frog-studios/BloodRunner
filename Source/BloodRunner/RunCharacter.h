@@ -13,6 +13,9 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnHealthBarMaxHealth);
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnStaminaUse, float, StaminaValue);
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnStaminaBarMaxStamina);
+
+
 UCLASS()
 class BLOODRUNNER_API ARunCharacter : public ACharacter
 {
@@ -101,10 +104,18 @@ protected:
 	UPROPERTY(VisibleAnywhere, Category="Health")
 	float MaxHealth;
 	UPROPERTY(VisibleAnywhere, Category="Health")
+	float MaxHealthIncrementAmount;
+	UPROPERTY(VisibleAnywhere, Category="Health")
+	float MaxUpgradedHealth;
+	UPROPERTY(VisibleAnywhere, Category="Health")
 	float PlayerHealth;
 
 	UPROPERTY(VisibleAnywhere, Category="Stamina")
 	float MaxStamina;
+	UPROPERTY(VisibleAnywhere, Category="Stamina")
+	float MaxUpgradedStamina;
+	UPROPERTY(VisibleAnywhere, Category="Stamina")
+	float MaxStaminaIncrementAmount;
 	UPROPERTY(VisibleAnywhere, Category="Stamina")
 	float PlayerStamina;
 	UPROPERTY(VisibleAnywhere, Category="Stamina")
@@ -215,23 +226,25 @@ public:
 	UFUNCTION(BlueprintCallable, Category="Stamina")
 	float GetPlayerMaxStamina() const;
 	UFUNCTION(BlueprintCallable, Category="Stamina")
+	void SetPlayerStamina(float Stamina);
+	UFUNCTION(BlueprintCallable, Category="Stamina")
 	float GetPlayerRelativeStamina() const;
 	UFUNCTION(BlueprintCallable, Category="Stamina")
 	void IncrementPlayerStamina(float Stamina = 0.1f);
-	UFUNCTION(BlueprintCallable, Category="Stamina")
-	void SetPlayerStamina(float Stamina);
+	UFUNCTION(BlueprintCallable, Category="Health")
+	void UpgradeMaxStamina();
 	UFUNCTION(BlueprintCallable, Category="Stamina")
 	void StartStaminaRegen();
 
 	UPROPERTY(BlueprintAssignable, BlueprintCallable, Category="Delegates")
 	FOnPotionsCountChange OnPotionsCountChange;
-
 	UPROPERTY(BlueprintAssignable, BlueprintCallable, Category="Delegates")
 	FOnHealthBarHeal OnHealthBarHeal;
-
 	UPROPERTY(BlueprintAssignable, BlueprintCallable, Category="Delegates")
 	FOnHealthBarMaxHealth OnHealthBarMaxHealth;
 
 	UPROPERTY(BlueprintAssignable, BlueprintCallable, Category="Delegates")
 	FOnStaminaUse OnStaminaUse;
+	UPROPERTY(BlueprintAssignable, BlueprintCallable, Category="Delegates")
+	FOnStaminaBarMaxStamina OnStaminaBarMaxStamina;
 };

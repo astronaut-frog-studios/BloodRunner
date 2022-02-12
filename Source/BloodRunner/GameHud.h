@@ -42,4 +42,6 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category="Stamina")
 	void SetStamina(float const Value);
+	UFUNCTION(BlueprintCallable, Category="Health")
+	void UpgradeMaxStamina();
 };
