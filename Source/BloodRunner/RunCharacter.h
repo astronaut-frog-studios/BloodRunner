@@ -5,6 +5,8 @@
 #include "GameFramework/Character.h"
 #include "RunCharacter.generated.h"
 
+class UNiagaraSystem;
+
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnPotionsCountChange, int32, PotionsCount);
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnHealthBarHeal, float, HealthValue);
@@ -14,7 +16,6 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnHealthBarMaxHealth);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnStaminaUse, float, StaminaValue);
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnStaminaBarMaxStamina);
-
 
 UCLASS()
 class BLOODRUNNER_API ARunCharacter : public ACharacter
@@ -51,7 +52,7 @@ private:
 	UFUNCTION(Category="MyCamera")
 	void CameraFollowPlayer(float const DeltaTime);
 	UPROPERTY(VisibleAnywhere, Category="MyCamera")
-	bool bCameraCanFollow;
+	bool bCameraIsStationary;
 	UPROPERTY(EditAnywhere, Category="MyCamera")
 	FVector InitialCameraOffset;
 	UPROPERTY(EditAnywhere, Category="MyCamera")
@@ -169,17 +170,16 @@ public:
 
 	void IncrementSpeeds();
 
-	UFUNCTION(BlueprintCallable, Category="MyCamera")
-	float GetNotFollowingMaxSeconds() const;
-	UFUNCTION(BlueprintCallable, Category="MyCamera")
-	void SetNotFollowingMaxSeconds(float const Value);
-
 	UFUNCTION(BlueprintImplementableEvent, Category="CameraAnim")
-	void AnimCamera();
+	void SprintAnimCamera();
 	UFUNCTION(BlueprintCallable, Category="CameraAnim")
-	void AnimCameraUpdate(float InterpolationValue);
+	void SprintAnimCameraUpdate(float InterpolationValue);
 	UFUNCTION(BlueprintCallable, Category="CameraAnim")
-	void AnimCameraFinished();
+	void SprintAnimCameraFinished();
+	UFUNCTION(BlueprintCallable, Category="CameraAnim")
+	float GetNotFollowingMaxSeconds() const;
+	UFUNCTION(BlueprintCallable, Category="CameraAnim")
+	void SetNotFollowingMaxSeconds(float const Value);
 
 	UFUNCTION(BlueprintImplementableEvent, Category="DamageCamera")
 	void AnimDamageCamera();

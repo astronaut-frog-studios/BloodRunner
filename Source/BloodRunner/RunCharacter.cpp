@@ -13,7 +13,7 @@ ARunCharacter::ARunCharacter()
 {
 	PrimaryActorTick.bCanEverTick = true;
 
-	bCameraCanFollow = true;
+	bCameraIsStationary = true;
 	bIsDead = false;
 	bCanRegenStamina = false;
 	NotFollowingInitialSeconds = 2.f;
@@ -29,11 +29,11 @@ ARunCharacter::ARunCharacter()
 	AmountToHeal = 0.2f;
 	MaxHealthPotions = 5;
 
-	MaxStamina = 1.f;
+	MaxStamina = 1.4f;
 	PlayerStamina = MaxStamina;
-	MaxUpgradedStamina = 2.0f;
+	MaxUpgradedStamina = 2.8f;
 	MaxStaminaIncrementAmount = 0.2f;
-	PlayerStaminaConsume = 0.005f;
+	PlayerStaminaConsume = 0.004f;
 	PlayerStaminaRegen = 0.002f;
 
 	CurrentLane = 1;
@@ -99,19 +99,17 @@ void ARunCharacter::InitGameHud()
 void ARunCharacter::OnHitReceived(float const Damage)
 {
 	IncrementPlayerHealth(-Damage);
-
 	static FVector Impulse = FVector(-5000.f, 0, 0);
-
 	GetCharacterMovement()->AddImpulse(Impulse, true);
 
-	if (bCameraCanFollow)
+	if (bCameraIsStationary)
 	{
 		GetCapsuleComponent()->SetCollisionProfileName(TEXT("Invencible"));
 		CameraArmComponent->TargetOffset.X = InitialCameraOffset.X - 300;
 		GetWorldTimerManager().SetTimer(DamageTimeHandler, this, &ARunCharacter::PushBackOnDamage, 1.3f, false);
 		AnimDamageCamera();
 	}
-	else if (!bCameraCanFollow)
+	else if (!bCameraIsStationary)
 	{
 		GetCapsuleComponent()->SetCollisionProfileName(TEXT("Invencible"));
 		CameraArmComponent->TargetOffset.X = InitialCameraOffset.X - 100;
@@ -209,28 +207,25 @@ void ARunCharacter::CameraFollowPlayer(float const DeltaTime)
 	ControlRotator.Roll = 0.0f;
 	ControlRotator.Pitch = 0.0f;
 	AddMovementInput(ControlRotator.Vector());
+	FVector const CameraArmLocation = CameraArmComponent->GetComponentLocation();
+	FVector const CameraFollowPlayer = FVector(GetActorLocation().X - CameraSpeedX, CameraArmLocation.Y,
+	                                           CameraArmLocation.Z);
+	CameraArmComponent->SetRelativeLocation(CameraFollowPlayer);
 
-	if (bCameraCanFollow)
+	if (!bCameraIsStationary)
 	{
-		FVector const CameraArmLocation = CameraArmComponent->GetComponentLocation();
-		FVector const CameraFollowPlayer = FVector(GetActorLocation().X - CameraSpeedX, CameraArmLocation.Y,
-		                                           CameraArmLocation.Z);
-
-		CameraArmComponent->SetRelativeLocation(CameraFollowPlayer);
-	}
-	else if (!bCameraCanFollow)
-	{
-		SetNotFollowingMaxSeconds(GetNotFollowingMaxSeconds() - DeltaTime);
-
-		if (NotFollowingMaxSeconds <= 0)
-		{
-			AnimCamera();
-		}
+		//TODO: instantiate run effect
+		// SetNotFollowingMaxSeconds(GetNotFollowingMaxSeconds() - DeltaTime);
+		//
+		// if (NotFollowingMaxSeconds <= 0)
+		// {
+		// 	SprintAnimCamera();
+		// }
 	}
 }
 
-
-void ARunCharacter::AnimCameraUpdate(float const InterpolationValue)
+#pragma region SprintCamera
+void ARunCharacter::SprintAnimCameraUpdate(float const InterpolationValue)
 {
 	FVector CameraArmLocation = CameraArmComponent->GetComponentLocation();
 	CameraArmLocation.X = FMath::Lerp(CameraArmLocation.X, GetActorLocation().X - 100, InterpolationValue);
@@ -240,9 +235,9 @@ void ARunCharacter::AnimCameraUpdate(float const InterpolationValue)
 	SetNotFollowingMaxSeconds(NotFollowingInitialSeconds);
 }
 
-void ARunCharacter::AnimCameraFinished()
+void ARunCharacter::SprintAnimCameraFinished()
 {
-	bCameraCanFollow = true;
+	bCameraIsStationary = true;
 }
 
 float ARunCharacter::GetNotFollowingMaxSeconds() const
@@ -254,6 +249,7 @@ void ARunCharacter::SetNotFollowingMaxSeconds(float const Value)
 {
 	NotFollowingMaxSeconds = Value;
 }
+#pragma endregion SprintCamera
 
 void ARunCharacter::DamageCameraUpdate(float const InterpolationValue) const
 {
@@ -313,9 +309,9 @@ void ARunCharacter::IncrementSpeeds()
 
 void ARunCharacter::MoveNormal()
 {
-	if (!bCameraCanFollow)
+	if (!bCameraIsStationary)
 	{
-		AnimCamera();
+		SprintAnimCamera();
 	}
 
 	GetCharacterMovement()->MaxWalkSpeed = WalkSpeed;
@@ -325,7 +321,7 @@ void ARunCharacter::MoveNormal()
 
 void ARunCharacter::MoveFaster()
 {
-	if (PlayerStamina <= 0.006)
+	if (PlayerStamina <= 0.002)
 	{
 		return;
 	}
@@ -342,7 +338,7 @@ void ARunCharacter::MoveFaster()
 
 	if (!bIsPressingForwardAxis)
 	{
-		bCameraCanFollow = false;
+		bCameraIsStationary = false;
 	}
 
 	bIsPressingForwardAxis = true;
