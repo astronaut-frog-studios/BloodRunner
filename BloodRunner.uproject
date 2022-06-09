@@ -14,6 +14,12 @@
 			]
 		}
 	],
+	"Plugins": [
+		{
+			"Name": "NiagaraExtras",
+			"Enabled": true
+		}
+	],
 	"TargetPlatforms": [
 		"Android",
 		"AllDesktop",

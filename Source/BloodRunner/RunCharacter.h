@@ -3,9 +3,8 @@
 #include "CoreMinimal.h"
 
 #include "GameFramework/Character.h"
+#include "NiagaraComponent.h"
 #include "RunCharacter.generated.h"
-
-class UNiagaraSystem;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnPotionsCountChange, int32, PotionsCount);
 
@@ -30,6 +29,9 @@ private:
 	class USpringArmComponent* CameraArmComponent;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Components", meta = (AllowPrivateAccess = "true"))
 	class UCameraComponent* CameraComponent;
+	
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Components", meta = (AllowPrivateAccess = "true"))
+	UNiagaraComponent* CameraSprintVfxComponent;
 
 	UPROPERTY(VisibleInstanceOnly)
 	bool bCanInitHud;
@@ -169,6 +171,9 @@ public:
 	void ChangeLaneFinished();
 
 	void IncrementSpeeds();
+
+	UFUNCTION(BlueprintCallable, Category="Movement")
+	bool GetPressingForwardAxis() const;
 
 	UFUNCTION(BlueprintImplementableEvent, Category="CameraAnim")
 	void SprintAnimCamera();

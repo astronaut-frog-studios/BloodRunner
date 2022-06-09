@@ -29,12 +29,12 @@ ARunCharacter::ARunCharacter()
 	AmountToHeal = 0.2f;
 	MaxHealthPotions = 5;
 
-	MaxStamina = 1.4f;
+	MaxStamina = 1.6f;
 	PlayerStamina = MaxStamina;
-	MaxUpgradedStamina = 2.8f;
+	MaxUpgradedStamina = 3.2f;
 	MaxStaminaIncrementAmount = 0.2f;
-	PlayerStaminaConsume = 0.004f;
-	PlayerStaminaRegen = 0.002f;
+	PlayerStaminaConsume = 0.0025f;
+	PlayerStaminaRegen = 0.001f;
 
 	CurrentLane = 1;
 	NextLane = 0;
@@ -46,6 +46,8 @@ ARunCharacter::ARunCharacter()
 	CameraSpeedX = 120;
 
 	SetupCamera();
+	CameraSprintVfxComponent = CreateDefaultSubobject<UNiagaraComponent>(TEXT("SprintEffect"));
+	CameraSprintVfxComponent->SetupAttachment(GetRootComponent());
 }
 
 void ARunCharacter::BeginPlay()
@@ -214,7 +216,6 @@ void ARunCharacter::CameraFollowPlayer(float const DeltaTime)
 
 	if (!bCameraIsStationary)
 	{
-		//TODO: instantiate run effect
 		// SetNotFollowingMaxSeconds(GetNotFollowingMaxSeconds() - DeltaTime);
 		//
 		// if (NotFollowingMaxSeconds <= 0)
@@ -309,10 +310,11 @@ void ARunCharacter::IncrementSpeeds()
 
 void ARunCharacter::MoveNormal()
 {
-	if (!bCameraIsStationary)
-	{
-		SprintAnimCamera();
-	}
+	// if (!bCameraIsStationary)
+	// {
+	// 	SprintAnimCamera();
+	// }
+	CameraSprintVfxComponent->Deactivate();
 
 	GetCharacterMovement()->MaxWalkSpeed = WalkSpeed;
 
@@ -339,9 +341,16 @@ void ARunCharacter::MoveFaster()
 	if (!bIsPressingForwardAxis)
 	{
 		bCameraIsStationary = false;
+
+		CameraSprintVfxComponent->Activate();
 	}
 
 	bIsPressingForwardAxis = true;
+}
+
+bool ARunCharacter::GetPressingForwardAxis() const
+{
+	return bIsPressingForwardAxis;
 }
 #pragma endregion Movement
 
