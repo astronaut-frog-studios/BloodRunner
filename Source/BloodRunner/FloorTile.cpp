@@ -59,7 +59,7 @@ void AFloorTile::OnTriggerBoxOverlap(UPrimitiveComponent* OverlappedComponent, A
 	if (RunCharacter)
 	{
 		RunnerGameMode->AddFloorTile();
-
+		RunnerGameMode->IncrementDistancePoints();
 		RunCharacter->IncrementSpeeds();
 
 		GetWorldTimerManager().SetTimer(DestroyTimerHandle, this, &AFloorTile::DestroyFloorTile, 4.0f, false);

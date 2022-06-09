@@ -11,6 +11,8 @@ class AFloorTile;
 
 class UUserWidget;
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnDistancePointsChange, int32, DistancePoints);
+
 UCLASS()
 class BLOODRUNNER_API ARunnerGameModeBase : public AGameModeBase
 {
@@ -21,6 +23,11 @@ protected:
 
 	UPROPERTY(BlueprintReadOnly)
 	int32 SoulPoints = 0;
+
+	UPROPERTY(BlueprintReadOnly)
+	int32 DistancePoints = 0;
+	UPROPERTY(BlueprintReadOnly)
+	int32 DistancePointsMultiplier = 1;
 
 public:
 	UPROPERTY(EditAnywhere, Category="Config")
@@ -53,4 +60,14 @@ public:
 	void IncrementSoulPoints(int32 const Value = 1);
 	UFUNCTION(BlueprintCallable)
 	void SetSoulPoints(int32 const Value = 1);
+
+	UFUNCTION(BlueprintCallable)
+	int32 GetDistancePoints() const;
+	UFUNCTION(BlueprintCallable)
+	void IncrementDistancePoints(int32 const Value = 1);
+	UFUNCTION(BlueprintCallable)
+	void SetDistancePointsMultiplier(int32 const Value = 1);
+
+	UPROPERTY(BlueprintAssignable, BlueprintCallable, Category="Delegates")
+	FOnDistancePointsChange OnDistancePointsChange;
 };

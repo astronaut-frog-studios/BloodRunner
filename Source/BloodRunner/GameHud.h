@@ -29,6 +29,9 @@ protected:
 	UPROPERTY(BlueprintReadWrite, meta = (BindWidget))
 	class UProgressBar* StaminaBar;
 
+	UPROPERTY(BlueprintReadWrite, meta = (BindWidget))
+	class UTextBlock* DistancePoints;
+
 public:
 	UFUNCTION(BlueprintCallable)
 	void InitializeGameHudPlayer(ARunCharacter* RunCharacter);
@@ -44,4 +47,7 @@ public:
 	void SetStamina(float const Value);
 	UFUNCTION(BlueprintCallable, Category="Health")
 	void UpgradeMaxStamina();
+
+	UFUNCTION(BlueprintCallable, Category="DistancePoints")
+	void SetDistancePoints(int32 const Value);
 };

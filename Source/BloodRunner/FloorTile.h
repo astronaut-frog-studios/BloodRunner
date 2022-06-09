@@ -67,7 +67,7 @@ protected:
 	TArray<AActor*> ChildActors;
 
 	UPROPERTY(EditAnywhere, Category="Config")
-	float SoulSpawnPercent[2] = {0.32f, 0.59f};
+	float SoulSpawnPercent[2] = {0.42f, 0.59f};
 	UPROPERTY(EditAnywhere, Category="Config")
 	float ObstacleSpawnPercent[2] = {0.6f, 0.9f};
 	UPROPERTY(EditAnywhere, Category="Config")
@@ -81,7 +81,6 @@ protected:
 	float ThirdObsSpawnPercent[2] = {0.81f, 1.f};
 	UPROPERTY(EditAnywhere, Category="Config")
 	float SoulItemSpawnOffset = 400;
-
 
 	UFUNCTION()
 	void SpawnLaneItem(UArrowComponent* Lane);

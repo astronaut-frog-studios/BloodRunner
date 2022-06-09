@@ -8,11 +8,12 @@
 #include "Blueprint/UserWidget.h"
 #include "Kismet/GameplayStatics.h"
 
+
 void ARunnerGameModeBase::BeginPlay()
 {
 	Super::BeginPlay();
 
-	// UGameplayStatics::GetPlayerController(GetWorld(), 0)->bShowMouseCursor = true;
+	UGameplayStatics::GetPlayerController(GetWorld(), 0)->bShowMouseCursor = true;
 
 	GameHud = Cast<UGameHud>(CreateWidget(GetWorld(), GameHudClass));
 	check(GameHud);
@@ -95,3 +96,22 @@ void ARunnerGameModeBase::SetSoulPoints(int32 const Value)
 	SoulPoints = Value;
 }
 #pragma endregion Souls
+
+#pragma region Distance
+int32 ARunnerGameModeBase::GetDistancePoints() const
+{
+	return DistancePoints;
+}
+
+void ARunnerGameModeBase::IncrementDistancePoints(int32 const Value)
+{
+	DistancePoints += Value * DistancePointsMultiplier;
+
+	OnDistancePointsChange.Broadcast(DistancePoints);
+}
+
+void ARunnerGameModeBase::SetDistancePointsMultiplier(int32 const Value)
+{
+	DistancePointsMultiplier = Value;
+}
+#pragma endregion Distance

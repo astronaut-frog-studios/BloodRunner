@@ -4,6 +4,7 @@
 #include "GameHud.h"
 
 #include "Components/TextBlock.h"
+#include "Kismet/GameplayStatics.h"
 
 void UGameHud::InitializeGameHudPlayer(ARunCharacter* RunCharacter)
 {
@@ -16,7 +17,13 @@ void UGameHud::InitializeGameHudPlayer(ARunCharacter* RunCharacter)
 		RunCharacter->OnHealthBarHeal.AddDynamic(this, &UGameHud::SetHealth);
 		RunCharacter->OnHealthBarMaxHealth.AddDynamic(this, &UGameHud::UpgradeMaxHealth);
 		RunCharacter->OnStaminaUse.AddDynamic(this, &UGameHud::SetStamina);
-		RunCharacter->OnStaminaBarMaxStamina.AddDynamic(this,&UGameHud::UpgradeMaxStamina);
+		RunCharacter->OnStaminaBarMaxStamina.AddDynamic(this, &UGameHud::UpgradeMaxStamina);
+	}
+
+	ARunnerGameModeBase* RunnerGameMode = Cast<ARunnerGameModeBase>(UGameplayStatics::GetGameMode(GetWorld()));
+	if (RunnerGameMode)
+	{
+		RunnerGameMode->OnDistancePointsChange.AddDynamic(this, &UGameHud::SetDistancePoints);
 	}
 }
 
@@ -51,4 +58,9 @@ void UGameHud::UpgradeMaxStamina()
 
 	StaminaBar->SetRenderScale(FVector2D(StaminaBarScale.X + 0.15f, StaminaBarScale.Y));
 	StaminaBar->SetRenderTranslation(FVector2D(StaminaBarTranslation.X + 15.f, StaminaBarTranslation.Y));
+}
+
+void UGameHud::SetDistancePoints(int32 const Value)
+{
+	DistancePoints->SetText(FText::AsNumber(Value));
 }
