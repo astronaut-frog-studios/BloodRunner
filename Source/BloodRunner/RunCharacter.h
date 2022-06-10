@@ -180,8 +180,6 @@ public:
 	UFUNCTION(BlueprintCallable, Category="CameraAnim")
 	void SprintAnimCameraUpdate(float InterpolationValue);
 	UFUNCTION(BlueprintCallable, Category="CameraAnim")
-	void SprintAnimCameraFinished();
-	UFUNCTION(BlueprintCallable, Category="CameraAnim")
 	float GetNotFollowingMaxSeconds() const;
 	UFUNCTION(BlueprintCallable, Category="CameraAnim")
 	void SetNotFollowingMaxSeconds(float const Value);

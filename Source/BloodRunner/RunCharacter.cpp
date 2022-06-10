@@ -33,8 +33,8 @@ ARunCharacter::ARunCharacter()
 	PlayerStamina = MaxStamina;
 	MaxUpgradedStamina = 3.2f;
 	MaxStaminaIncrementAmount = 0.2f;
-	PlayerStaminaConsume = 0.0025f;
-	PlayerStaminaRegen = 0.001f;
+	PlayerStaminaConsume = 0.003f;
+	PlayerStaminaRegen = 0.002f;
 
 	CurrentLane = 1;
 	NextLane = 0;
@@ -142,33 +142,34 @@ void ARunCharacter::PushBackOnDamage()
 
 void ARunCharacter::Death()
 {
-	if (!bIsDead)
+	if (bIsDead)
 	{
-		const FVector PlayerLocation = GetActorLocation();
+		return;
+	}
 
-		UWorld* World = GetWorld();
+	const FVector PlayerLocation = GetActorLocation();
+	UWorld* World = GetWorld();
 
-		if (World)
+	if (World)
+	{
+		bIsDead = true;
+		DisableInput(nullptr);
+		GetCharacterMovement()->MaxWalkSpeed = 0;
+
+		if (DeathParticleSystem) //TODO: Death effect, Bloodborne deadh effect on screen
 		{
-			bIsDead = true;
-			DisableInput(nullptr);
-			GetCharacterMovement()->MaxWalkSpeed = 0;
-
-			if (DeathParticleSystem) //TODO: Death effect, Bloodborne deadh effect on screen
-			{
-				UGameplayStatics::SpawnEmitterAtLocation(World, DeathParticleSystem, PlayerLocation);
-			}
-
-			if (DeathSound)
-			{
-				UGameplayStatics::PlaySoundAtLocation(World, DeathSound, PlayerLocation);
-			}
-
-			SetActorEnableCollision(false);
-			GetMesh()->SetVisibility(false);
-
-			World->GetTimerManager().SetTimer(RestartTimeHandler, this, &ARunCharacter::OnDeath, 2.0f);
+			UGameplayStatics::SpawnEmitterAtLocation(World, DeathParticleSystem, PlayerLocation);
 		}
+
+		if (DeathSound)
+		{
+			UGameplayStatics::PlaySoundAtLocation(World, DeathSound, PlayerLocation);
+		}
+
+		SetActorEnableCollision(false);
+		GetMesh()->SetVisibility(false);
+
+		World->GetTimerManager().SetTimer(RestartTimeHandler, this, &ARunCharacter::OnDeath, 2.0f);
 	}
 }
 
@@ -214,31 +215,31 @@ void ARunCharacter::CameraFollowPlayer(float const DeltaTime)
 	                                           CameraArmLocation.Z);
 	CameraArmComponent->SetRelativeLocation(CameraFollowPlayer);
 
-	if (!bCameraIsStationary)
-	{
-		// SetNotFollowingMaxSeconds(GetNotFollowingMaxSeconds() - DeltaTime);
-		//
-		// if (NotFollowingMaxSeconds <= 0)
-		// {
-		// 	SprintAnimCamera();
-		// }
-	}
+	// SetNotFollowingMaxSeconds(GetNotFollowingMaxSeconds() - DeltaTime);
+	//
+	// if (NotFollowingMaxSeconds <= 0)
+	// {
+	// 	SprintAnimCamera();
+	// }
 }
 
 #pragma region SprintCamera
 void ARunCharacter::SprintAnimCameraUpdate(float const InterpolationValue)
 {
-	FVector CameraArmLocation = CameraArmComponent->GetComponentLocation();
-	CameraArmLocation.X = FMath::Lerp(CameraArmLocation.X, GetActorLocation().X - 100, InterpolationValue);
+	if (bIsPressingForwardAxis)
+	{
+		FVector NewCameraArmOffset = CameraArmComponent->TargetOffset;
+		NewCameraArmOffset.X = FMath::Lerp(NewCameraArmOffset.X, InitialCameraOffset.X + 150, InterpolationValue);
+		CameraArmComponent->TargetOffset = NewCameraArmOffset;
+		return;
+	}
 
-	CameraArmComponent->SetWorldLocation(CameraArmLocation);
-
-	SetNotFollowingMaxSeconds(NotFollowingInitialSeconds);
-}
-
-void ARunCharacter::SprintAnimCameraFinished()
-{
+	FVector NewCameraArmOffset = CameraArmComponent->TargetOffset;
+	NewCameraArmOffset.X = FMath::Lerp(NewCameraArmOffset.X, InitialCameraOffset.X + 6, InterpolationValue);
+	CameraArmComponent->TargetOffset = NewCameraArmOffset;
 	bCameraIsStationary = true;
+
+	// SetNotFollowingMaxSeconds(NotFollowingInitialSeconds);
 }
 
 float ARunCharacter::GetNotFollowingMaxSeconds() const
@@ -310,15 +311,12 @@ void ARunCharacter::IncrementSpeeds()
 
 void ARunCharacter::MoveNormal()
 {
-	// if (!bCameraIsStationary)
-	// {
-	// 	SprintAnimCamera();
-	// }
-	CameraSprintVfxComponent->Deactivate();
+	bIsPressingForwardAxis = false;
 
+	CameraSprintVfxComponent->Deactivate();
 	GetCharacterMovement()->MaxWalkSpeed = WalkSpeed;
 
-	bIsPressingForwardAxis = false;
+	SprintAnimCamera();
 }
 
 void ARunCharacter::MoveFaster()
@@ -328,11 +326,14 @@ void ARunCharacter::MoveFaster()
 		return;
 	}
 
+	if (bCameraIsStationary)
+	{
+		SprintAnimCamera();
+	}
+
 	FRotator ControlRotator = GetControlRotation();
 	ControlRotator.Roll = 0.0f;
 	ControlRotator.Pitch = 0.0f;
-	// const FRotator Yaw(0.f, ControlRotator.Yaw, 0.f);
-	// FVector direction = FRotationMatrix(Yaw).GetUnitAxis(EAxis::X);
 
 	GetCharacterMovement()->MaxWalkSpeed = SprintSpeed;
 
@@ -341,7 +342,6 @@ void ARunCharacter::MoveFaster()
 	if (!bIsPressingForwardAxis)
 	{
 		bCameraIsStationary = false;
-
 		CameraSprintVfxComponent->Activate();
 	}
 
