@@ -62,5 +62,7 @@ void UGameHud::UpgradeMaxStamina()
 
 void UGameHud::SetDistancePoints(int32 const Value)
 {
-	DistancePoints->SetText(FText::AsNumber(Value));
+	FFormatNamedArguments Args;
+	Args.Add("Meters", Value);
+	DistancePoints->SetText(FText::Format(NSLOCTEXT("HUD", "Meters", "{Meters} m"), Args));
 }
