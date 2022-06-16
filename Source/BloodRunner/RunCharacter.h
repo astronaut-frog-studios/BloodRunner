@@ -97,8 +97,14 @@ protected:
 	float InitialSpeed;
 	UPROPERTY(EditAnywhere, Category="Movement")
 	float SprintSpeed;
+	UPROPERTY(EditAnywhere, Category="Movement")
+	float MaxSprintSpeed;
+	UPROPERTY(EditAnywhere, Category="Movement")
+	float SprintSpeedMultiply;
 	UPROPERTY(VisibleAnywhere, Category="Movement")
 	float WalkSpeed;
+	UPROPERTY(EditAnywhere, Category="Movement")
+	float WalkSpeedMultiply;
 	UPROPERTY(VisibleAnywhere, Category="Movement")
 	float CameraSpeedX;
 	UPROPERTY(EditAnywhere, Category="Movement")

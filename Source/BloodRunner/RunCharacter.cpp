@@ -17,7 +17,7 @@ ARunCharacter::ARunCharacter()
 	bIsDead = false;
 	bCanRegenStamina = false;
 	NotFollowingInitialSeconds = 2.f;
-	InitialCameraOffset = FVector(-550.0, 0.f, 730);
+	InitialCameraOffset = FVector(-650.0, 0.f, 730);
 	NotFollowingMaxSeconds = NotFollowingInitialSeconds;
 
 	MaxHealth = 1.f;
@@ -38,12 +38,15 @@ ARunCharacter::ARunCharacter()
 
 	CurrentLane = 1;
 	NextLane = 0;
-	MaxSpeed = 3200;
-	InitialSpeed = 800;
-	SprintSpeed = 1500;
+	MaxSpeed = 3600;
+	InitialSpeed = 1060;
+	SprintSpeed = 1600;
+	MaxSprintSpeed = 4200;
+	SprintSpeedMultiply = 1.025;
+	WalkSpeedMultiply = 1.02;
 	WalkSpeed = InitialSpeed;
 	MoveBackSpeed = 200;
-	CameraSpeedX = 120;
+	CameraSpeedX = 100;
 
 	SetupCamera();
 	CameraSprintVfxComponent = CreateDefaultSubobject<UNiagaraComponent>(TEXT("SprintEffect"));
@@ -114,7 +117,7 @@ void ARunCharacter::OnHitReceived(float const Damage)
 	else if (!bCameraIsStationary)
 	{
 		GetCapsuleComponent()->SetCollisionProfileName(TEXT("Invencible"));
-		CameraArmComponent->TargetOffset.X = InitialCameraOffset.X - 100;
+		CameraArmComponent->TargetOffset.X = InitialCameraOffset.X;
 		GetWorldTimerManager().SetTimer(DamageTimeHandler, this, &ARunCharacter::PushBackOnDamage, 1.3f, false);
 		AnimDamageCamera();
 	}
@@ -191,7 +194,7 @@ void ARunCharacter::OnDeath()
 void ARunCharacter::SetupCamera()
 {
 	CameraArmComponent = CreateDefaultSubobject<USpringArmComponent>(TEXT("CameraArm"));
-	CameraArmComponent->TargetArmLength = 500.f;
+	CameraArmComponent->TargetArmLength = 550.f;
 	CameraArmComponent->TargetOffset = InitialCameraOffset;
 	CameraArmComponent->bUsePawnControlRotation = true;
 	CameraArmComponent->SetupAttachment(GetRootComponent());
@@ -235,7 +238,7 @@ void ARunCharacter::SprintAnimCameraUpdate(float const InterpolationValue)
 	}
 
 	FVector NewCameraArmOffset = CameraArmComponent->TargetOffset;
-	NewCameraArmOffset.X = FMath::Lerp(NewCameraArmOffset.X, InitialCameraOffset.X + 6, InterpolationValue);
+	NewCameraArmOffset.X = FMath::Lerp(NewCameraArmOffset.X, InitialCameraOffset.X, InterpolationValue);
 	CameraArmComponent->TargetOffset = NewCameraArmOffset;
 	bCameraIsStationary = true;
 
@@ -296,11 +299,14 @@ void ARunCharacter::MoveLeft()
 
 void ARunCharacter::IncrementSpeeds()
 {
+	if (SprintSpeed < MaxSprintSpeed)
+	{
+		SprintSpeed *= SprintSpeedMultiply;
+	}
+
 	if (WalkSpeed < MaxSpeed)
 	{
-		WalkSpeed *= 1.01f;
-		SprintSpeed *= 1.01f;
-		CameraSpeedX *= 1.01f;
+		WalkSpeed *= WalkSpeedMultiply;
 
 		if (!bIsPressingForwardAxis)
 		{
